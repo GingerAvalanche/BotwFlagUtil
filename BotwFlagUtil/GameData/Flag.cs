@@ -85,6 +85,7 @@ namespace BotwFlagUtil.GameData
             bool? isRevival = null
         )
         {
+            this.dataName = string.Empty;
             DataName = dataName;
             if (type != FlagUnionType.None)
             {
@@ -106,6 +107,7 @@ namespace BotwFlagUtil.GameData
 
         public Flag(ImmutableByml byml, FlagUnionType type, ImmutableBymlStringTable keyTable, ImmutableBymlStringTable stringTable, bool? isRevival = null)
         {
+            dataName = string.Empty;
             foreach ((int keyIndex, ImmutableByml node) in byml.GetMap())
             {
                 switch (keyTable[keyIndex].ToManaged())
@@ -152,6 +154,7 @@ namespace BotwFlagUtil.GameData
 
         public Flag(Byml byml, FlagUnionType type, bool? isRevival = null)
         {
+            dataName = string.Empty;
             foreach ((string key, Byml node) in byml.GetMap())
             {
                 switch (key)
