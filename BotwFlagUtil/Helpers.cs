@@ -1,5 +1,10 @@
 ﻿using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
+using BymlLibrary;
+using BymlLibrary.Nodes.Immutable.Containers;
+using CsYaz0;
+using Revrs;
+using SarcLibrary;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -9,6 +14,18 @@ namespace BotwFlagUtil
 {
     internal static class Helpers
     {
+        public static string? RootDir;
+        private static Endianness? modEndianness;
+        private static Dictionary<string, Vec3>? modShrineLocs;
+        private static Dictionary<string, Vec3>? allShrineLocs;
+        private static HashSet<string>? vanillaLocSaveFlags;
+        private static Dictionary<string, Vec3>? vanillaShrineLocs; 
+        public static readonly Dictionary<string, string[]> vanillaHasFlags =
+            JsonSerializer.Deserialize<Dictionary<string, string[]>>(
+                File.ReadAllText(
+                    Path.Combine(AppContext.BaseDirectory, "data", "vanilla_actors.json")
+                )
+            )!;
         public static Dictionary<string, FlagUnionType> keyToFlagType = new()
         {
             { "bool_data", FlagUnionType.Bool },
@@ -354,6 +371,223 @@ namespace BotwFlagUtil
             "GameDataVec3fToName",
             "GameDataVec3fPlayerPos"
         ];
+        public static Endianness ModEndianness
+        {
+            get
+            {
+                if (!modEndianness.HasValue)
+                {
+                    if (RootDir == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Attempted to get endianness before rootdir set"
+                        );
+                    }
+                    modEndianness = Directory.Exists(Path.Combine(RootDir, "content")) ? 
+                        Endianness.Big : Endianness.Little;
+                }
+                return modEndianness.Value;
+            }
+        }
+        public static Dictionary<string, Vec3> ModShrineLocs
+        {
+            get
+            {
+                if (modShrineLocs == null)
+                {
+                    modShrineLocs = AllShrineLocs.Except(VanillaShrineLocs).ToDictionary();
+                }
+                return modShrineLocs;
+            }
+        }
+        public static Dictionary<string, Vec3> AllShrineLocs
+        {
+            get
+            {
+                if (allShrineLocs == null)
+                {
+                    allShrineLocs = new(VanillaShrineLocs); // Shallow copy, will never edit, only add new
+                    string staticPath = GetFullModPath("Map/MainField/Static.smubin");
+                    if (File.Exists(staticPath))
+                    {
+                        Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(staticPath));
+                        RevrsReader reader = new(bytes, ModEndianness);
+                        ImmutableByml byml = new(ref reader);
+                        ImmutableBymlMap map = byml.GetMap();
+                        ImmutableBymlStringTable keyTable = byml.KeyTable;
+                        foreach (ImmutableByml marker in map.GetValue(keyTable, "LocationMarker").GetArray())
+                        {
+                            ImmutableBymlMap markerMap = marker.GetMap();
+                            ImmutableBymlStringTable stringTable = byml.StringTable;
+                            if (markerMap.TryGetValue(keyTable, "Icon", out ImmutableByml icon) &&
+                                icon.GetString(stringTable) == "Dungeon" &&
+                                markerMap.TryGetValue(keyTable, "MessageID", out ImmutableByml messageId) &&
+                                !allShrineLocs.TryGetValue(messageId.GetString(stringTable), out Vec3 value))
+                            {
+                                ImmutableBymlArray vec = markerMap.GetValue(keyTable, "Translate").GetArray();
+                                value.X = vec[0].GetFloat();
+                                value.Y = vec[1].GetFloat();
+                                value.Z = vec[2].GetFloat();
+                                allShrineLocs.Add(messageId.GetString(stringTable), value);
+                            }
+                        }
+                    }
+                }
+                return allShrineLocs;
+            }
+        }
+        public static HashSet<string> VanillaLocSaveFlags
+        {
+            get
+            {
+                if (vanillaLocSaveFlags == null)
+                {
+                    RevrsReader reader = new(
+                        File.ReadAllBytes(GetFullStockPath("Map/MainField/Static.smubin")),
+                        ModEndianness
+                    );
+                    ImmutableByml stockStatic = new(ref reader);
+
+                    vanillaLocSaveFlags = [];
+                    ImmutableBymlStringTable keyTable = stockStatic.KeyTable;
+                    foreach (ImmutableByml marker in stockStatic
+                        .GetMap()
+                        .GetValue(keyTable, "LocationMarker")
+                        .GetArray()
+                    )
+                    {
+                        if (marker.GetMap().TryGetValue(keyTable, "SaveFlag", out ImmutableByml saveFlag))
+                        {
+                            vanillaLocSaveFlags.Add(saveFlag.GetString(stockStatic.StringTable));
+                        }
+                    }
+                }
+                return vanillaLocSaveFlags;
+            }
+        }
+        public static Dictionary<string, Vec3> VanillaShrineLocs
+        {
+            get
+            {
+                if (vanillaShrineLocs == null)
+                {
+                    string jsonPath =
+                        Path.Combine(AppContext.BaseDirectory, "data", "vanilla_shrines.json");
+                    vanillaShrineLocs =
+                        JsonSerializer.Deserialize<Dictionary<string, Vec3>>(File.ReadAllText(jsonPath))!;
+                }
+                return vanillaShrineLocs;
+            }
+        }
+
+        public static string GetFullModPath(string relativePath)
+        {
+            if (RootDir == null)
+            {
+                throw new InvalidOperationException("Attempted to read path without root directory");
+            }
+            string middle;
+            if (ModEndianness == Endianness.Big)
+            {
+                if (relativePath.Contains("Map"))
+                {
+                    middle = Path.Combine("aoc", "0010");
+                }
+                else
+                {
+                    middle = "content";
+                }
+            }
+            else
+            {
+                if (relativePath.Contains("Map"))
+                {
+                    middle = Path.Combine("01007EF00011E800", "romfs");
+                }
+                else
+                {
+                    middle = Path.Combine("01007EF00011F001", "romfs");
+                }
+            }
+            return Path.Combine(RootDir, middle, relativePath);
+        }
+
+        public static string GetFullStockPath(string relativePath)
+        {
+            Settings settings = Settings.Load();
+            string rootDir;
+            if (ModEndianness == Endianness.Big)
+            {
+                if (relativePath.Contains("Map"))
+                {
+                    rootDir = settings.dlcDir;
+                }
+                else if (File.Exists(Path.Combine(settings.updateDir, relativePath)))
+                {
+                    rootDir = settings.updateDir;
+                }
+                else
+                {
+                    rootDir = settings.gameDir;
+                }
+            }
+            else
+            {
+                if (relativePath.Contains("Map"))
+                {
+                    rootDir = settings.dlcDirNx;
+                }
+                else
+                {
+                    rootDir = settings.gameDirNx;
+                }
+            }
+            return Path.Combine(rootDir, relativePath);
+        }
+
+        public static string GetNearestShrine(Vec3 loc)
+        {
+            double smallestDistance = 10000000.0;
+            string nearestShrine = string.Empty;
+            foreach ((string shrineName, Vec3 shrineLoc) in AllShrineLocs)
+            {
+                double shrineDistance = GetVectorDistance(loc, shrineLoc);
+                if (shrineDistance < smallestDistance)
+                {
+                    smallestDistance = shrineDistance;
+                    nearestShrine = shrineName;
+                }
+            }
+            return nearestShrine;
+        }
+
+        public static bool GetStockMainFieldMapReader(string fileName, out RevrsReader reader)
+        {
+            string section = fileName.Split('_')[0];
+            string path = GetFullStockPath($"Map/MainField/{section}/{fileName}");
+            if (File.Exists(path))
+            {
+                reader = new(File.ReadAllBytes(path), ModEndianness);
+                return true;
+            }
+            reader = default;
+            return false;
+        }
+
+        public static bool GetStockPackReader(string fileName, out RevrsReader reader)
+        {
+            string path = GetFullStockPath($"Pack/{fileName}");
+            if (File.Exists(path))
+            {
+                reader = new(File.ReadAllBytes(path), ModEndianness);
+                return true;
+            }
+            reader = default;
+            return false;
+        }
+
+        private static double GetVectorDistance(Vec3 a, Vec3 b)
+            => Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2));
     }
 
     public class FloatConverter : JsonConverter<float>

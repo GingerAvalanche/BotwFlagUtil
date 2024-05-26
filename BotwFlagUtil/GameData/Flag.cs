@@ -10,7 +10,7 @@ namespace BotwFlagUtil.GameData
     public struct Flag : IEquatable<Flag>
     {
         private string dataName;
-        private int hashValue;
+        private NintendoHash hashValue;
         [JsonInclude]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? Category;
@@ -208,15 +208,17 @@ namespace BotwFlagUtil.GameData
                 hashValue = (int)Crc32.Compute(dataName);
             }
         }
-        public readonly int HashValue { get => hashValue; }
+        public readonly NintendoHash HashValue { get => hashValue; }
 
         public static bool operator ==(Flag first, Flag second) => first.Equals(second);
         public static bool operator !=(Flag first, Flag second) => !first.Equals(second);
 
         /// <summary>
-        /// Only for getting 
+        /// Convenience function for getting something that will work with HashSet removals.
+        /// i.e. HashValue, GetHashCode(), etc.
+        /// Do not try to use a temp flag as a real flag.
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="name">DataName to give the temp flag</param>
         /// <returns></returns>
         public static Flag GetTempFlag(string name) => new(name, FlagUnionType.None);
 
@@ -226,7 +228,7 @@ namespace BotwFlagUtil.GameData
             {
                 { "DataName", dataName },
                 { "DeleteRev", DeleteRev },
-                { "HashValue", hashValue },
+                { "HashValue", hashValue.ivalue },
                 { "InitValue", InitValue.ToByml() },
                 { "IsEventAssociated", IsEventAssociated },
                 { "IsOneTrigger", IsOneTrigger },
@@ -245,7 +247,7 @@ namespace BotwFlagUtil.GameData
             return new Dictionary<string, Byml>()
             {
                 { "DataName", dataName },
-                { "HashValue", hashValue }
+                { "HashValue", hashValue.ivalue }
             };
         }
 
@@ -262,7 +264,7 @@ namespace BotwFlagUtil.GameData
 
         public readonly override bool Equals(object? obj) => obj is Flag flag && Equals(flag);
 
-        public readonly override int GetHashCode() => hashValue;
+        public readonly override int GetHashCode() => hashValue.GetHashCode();
 
         public readonly override string ToString()
         {

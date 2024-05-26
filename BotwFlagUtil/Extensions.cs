@@ -168,5 +168,35 @@ namespace BotwFlagUtil
                 _ => throw new ArgumentException($"Invalid flag type: {type}", nameof(type)),
             };
         }
+
+        internal static bool TryGetValue(this ImmutableBymlMap map, ImmutableBymlStringTable table, string key, out ImmutableByml value)
+        {
+            foreach (var (mapKeyIdx, mapValue) in map)
+            {
+                Span<byte> mapKeySpan = table[mapKeyIdx];
+                if (mapKeySpan.Length == key.Length + 1 && mapKeySpan.ToManaged() == key)
+                {
+                    value = mapValue;
+                    return true;
+                }
+            }
+            value = default;
+            return false;
+        }
+
+        internal static ImmutableByml GetValue(this ImmutableBymlMap map, ImmutableBymlStringTable table, string key)
+        {
+            foreach (var (mapKeyIdx, mapValue) in map)
+            {
+                Span<byte> mapKeySpan = table[mapKeyIdx];
+                if (mapKeySpan.Length == key.Length + 1 && mapKeySpan.ToManaged() == key)
+                {
+                    return mapValue;
+                }
+            }
+            throw new KeyNotFoundException(key);
+        }
+
+        internal static string GetString(this ImmutableByml byml, ImmutableBymlStringTable table) => table[byml.GetStringIndex()].ToManaged();
     }
 }

@@ -21,7 +21,7 @@ namespace BotwFlagUtil.GameData
     {
         [JsonInclude]
         private readonly Dictionary<string, HashSet<Flag>> _flags;
-        private readonly HashSet<int> _hashes;
+        private readonly HashSet<NintendoHash> _hashes;
 
         public FlagMgr()
         {
@@ -172,7 +172,7 @@ namespace BotwFlagUtil.GameData
             _hashes.Add(flag.HashValue);
         }
 
-        public bool Contains(int hash) => _hashes.Contains(hash);
+        public bool Contains(NintendoHash hash) => _hashes.Contains(hash);
 
         public bool Remove(string flagName)
         {
