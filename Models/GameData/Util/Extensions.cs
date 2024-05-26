@@ -1,4 +1,5 @@
-﻿using BymlLibrary;
+﻿using System.Linq;
+using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 
 namespace BotwFlagUtil.GameData.Util

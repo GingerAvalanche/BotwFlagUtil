@@ -3,6 +3,8 @@ using BotwFlagUtil.GameData.Util;
 using BymlLibrary;
 using BymlLibrary.Extensions;
 using BymlLibrary.Nodes.Immutable.Containers;
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace BotwFlagUtil.GameData

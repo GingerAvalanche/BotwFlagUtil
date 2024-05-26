@@ -1,6 +1,8 @@
 ﻿using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 using BymlLibrary.Nodes.Immutable.Containers;
+using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace BotwFlagUtil.GameData.Util

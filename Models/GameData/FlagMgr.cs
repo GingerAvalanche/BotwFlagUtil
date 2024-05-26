@@ -6,6 +6,10 @@ using BymlLibrary.Nodes.Immutable.Containers;
 using CsYaz0;
 using Revrs;
 using SarcLibrary;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace BotwFlagUtil.GameData
