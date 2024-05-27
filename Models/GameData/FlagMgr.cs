@@ -204,6 +204,11 @@ namespace BotwFlagUtil.GameData
             return _flags.SelectMany(kvp => kvp.Value, (t, f) => f).Where(f => condition(f)).Select(f => conversion(f)).ToList();
         }
 
+        public IEnumerable<Flag> GetAllFlags()
+        {
+            return _flags.SelectMany(kvp => kvp.Value);
+        }
+
         private Dictionary<string, ReadOnlyMemory<byte>> GetBgDataFiles(Endianness endianness)
         {
             Dictionary<string, IEnumerable<BymlArray>> gameFlags = [];
