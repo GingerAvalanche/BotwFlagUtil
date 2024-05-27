@@ -317,6 +317,27 @@ namespace BotwFlagUtil.GameData.Util
             };
         }
 
+        public static FlagUnion FromString(FlagUnionType type, string data)
+        {
+            return type switch
+            {
+                FlagUnionType.Bool => bool.Parse(data),
+                FlagUnionType.BoolArray => data[1..^1].Split(',').Select(x => bool.Parse(x.Trim())).ToList(),
+                FlagUnionType.F32 => float.Parse(data),
+                FlagUnionType.F32Array => data[1..^1].Split(',').Select(x => float.Parse(x.Trim())).ToList(),
+                FlagUnionType.S32 => int.Parse(data),
+                FlagUnionType.S32Array => data[1..^1].Split(',').Select(x => int.Parse(x.Trim())).ToList(),
+                FlagUnionType.String => data,
+                FlagUnionType.StringArray => data[1..^1].Split(',').Select(x => x.Trim()).ToList(),
+                FlagUnionType.Vec2 => new Vec2(data),
+                FlagUnionType.Vec2Array => data[1..^1].Split(',').Select(x => new Vec2(x.Trim())).ToList(),
+                FlagUnionType.Vec3 => new Vec3(data),
+                FlagUnionType.Vec3Array => data[1..^1].Split(',').Select(x => new Vec3(x.Trim())).ToList(),
+                FlagUnionType.Vec4 => new Vec4(data),
+                _ => throw new InvalidOperationException($"{type} not valid Flag type"),
+            };
+        }
+
         public override readonly string ToString()
         {
             return Type switch
