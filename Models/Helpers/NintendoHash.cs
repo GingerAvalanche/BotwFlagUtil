@@ -63,7 +63,7 @@ namespace BotwFlagUtil
         {
             if (ivalue < 0)
             {
-                return $"!u 0x{uvalue:X8}";
+                return $"!u 0x{uvalue:x8}";
             }
             return ivalue.ToString();
         }
