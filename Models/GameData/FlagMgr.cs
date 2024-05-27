@@ -184,6 +184,23 @@ namespace BotwFlagUtil.GameData
             return _flags.Any(kvp => kvp.Value.Remove(flag)) && _hashes.Remove(flag.HashValue);
         }
 
+        public bool TryRetrieve(string flagName, out Flag flag, out FlagStringType stringType)
+        {
+            foreach ((string key, HashSet<Flag> flags) in _flags)
+            {
+                if (flags.TryGetValue(Flag.GetTempFlag(flagName), out flag))
+                {
+                    flags.Remove(flag);
+                    _hashes.Remove(flag.HashValue);
+                    stringType = Helpers.keyToStringType[key];
+                    return true;
+                }
+            }
+            flag = default;
+            stringType = FlagStringType.None;
+            return false;
+        }
+
         public int CountFlags()
         {
             return _flags.Select(kvp => kvp.Value.Count).Sum();
