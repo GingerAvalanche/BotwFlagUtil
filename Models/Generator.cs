@@ -35,8 +35,8 @@ namespace BotwFlagUtil
 
     public class Generator
     {
-        public readonly FlagMgr mgr;
-        public readonly Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
+        public FlagMgr mgr;
+        public Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
         private readonly HashSet<NintendoHash> orphanedFlagHashes;
         private static readonly string[] linkTagFlagNames =
         [
@@ -945,6 +945,14 @@ namespace BotwFlagUtil
             return Helpers.GetNearestShrine(
                 new Vec3(array[0].GetFloat(), array[1].GetFloat(), array[2].GetFloat())
             );
+        }
+
+        public void ReplaceManager(FlagMgr mgr)
+        {
+            this.mgr = mgr;
+            flagConfidence = mgr.GetAllFlags()
+                .Select(f => (f.HashValue, GeneratorConfidence.Definite))
+                .ToDictionary();
         }
     }
 }
