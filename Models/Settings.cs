@@ -36,7 +36,6 @@ namespace BotwFlagUtil
                 }
             }
 
-            JsonSerializerOptions options = new() { WriteIndented = true };
             if (File.Exists(Path.Combine(appdata, "bcml", "settings.json")))
             {
                 Dictionary<string, dynamic> bcmlSettings =
@@ -58,7 +57,7 @@ namespace BotwFlagUtil
                         JsonSerializer.Serialize(
                             value,
                             typeof(Settings),
-                            options
+                            Helpers.jsOpt
                         )
                     );
                     return value;
@@ -90,7 +89,7 @@ namespace BotwFlagUtil
             }
             File.WriteAllText(
                 Path.Combine(appdata, "botw_tools", "settings.json"),
-                JsonSerializer.Serialize(value, typeof(Settings), options)
+                JsonSerializer.Serialize(value, typeof(Settings), Helpers.jsOpt)
             );
             return value;
         }

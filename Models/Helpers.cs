@@ -392,6 +392,8 @@ namespace BotwFlagUtil
             "GameDataVec3fToName",
             "GameDataVec3fPlayerPos"
         ];
+        public static JsonSerializerOptions jsOpt = new() { WriteIndented = true };
+
         public static Endianness ModEndianness
         {
             get
