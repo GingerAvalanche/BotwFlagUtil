@@ -140,11 +140,22 @@ namespace BotwFlagUtil
             },
         };
         public static Dictionary<string, FlagStringType> keyToStringType = new() {
+            { "bool_data", FlagStringType.None },
+            { "bool_array_data", FlagStringType.None },
+            { "f32_data", FlagStringType.None },
+            { "f32_array_data", FlagStringType.None },
+            { "s32_data", FlagStringType.None },
+            { "s32_array_data", FlagStringType.None },
             { "string_data", FlagStringType.String32 },
             { "string64_data", FlagStringType.String64 },
             { "string64_array_data", FlagStringType.String64 },
             { "string256_data", FlagStringType.String256 },
             { "string256_array_data", FlagStringType.String256 },
+            { "vector2f_data", FlagStringType.None },
+            { "vector2f_array_data", FlagStringType.None },
+            { "vector3f_data", FlagStringType.None },
+            { "vector3f_array_data", FlagStringType.None },
+            { "vector4f_data", FlagStringType.None },
         };
         public static Dictionary<string, HashSet<string>> actionParams = new() {
             {
