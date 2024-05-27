@@ -35,8 +35,8 @@ namespace BotwFlagUtil
 
     public class Generator
     {
-        internal readonly FlagMgr mgr;
-        internal readonly Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
+        public readonly FlagMgr mgr;
+        public readonly Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
         private readonly HashSet<NintendoHash> orphanedFlagHashes;
         private static readonly string[] linkTagFlagNames =
         [

@@ -21,7 +21,7 @@ namespace BotwFlagUtil.GameData
         String64,
         String256
     }
-    internal class FlagMgr
+    public class FlagMgr
     {
         [JsonInclude]
         private readonly Dictionary<string, HashSet<Flag>> _flags;
