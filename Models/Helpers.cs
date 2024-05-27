@@ -139,6 +139,13 @@ namespace BotwFlagUtil
                 }
             },
         };
+        public static Dictionary<string, FlagStringType> keyToStringType = new() {
+            { "string_data", FlagStringType.String32 },
+            { "string64_data", FlagStringType.String64 },
+            { "string64_array_data", FlagStringType.String64 },
+            { "string256_data", FlagStringType.String256 },
+            { "string256_array_data", FlagStringType.String256 },
+        };
         public static Dictionary<string, HashSet<string>> actionParams = new() {
             {
                 "Demo_ActorInfoToGameDataVec3",
