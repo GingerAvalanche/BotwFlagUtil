@@ -6,7 +6,6 @@ using System.Text.Json;
 using Avalonia.Controls.Selection;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
-using DynamicData;
 using ReactiveUI;
 
 namespace BotwFlagUtil.ViewModels;
@@ -152,11 +151,6 @@ public class MainWindowViewModel : ViewModelBase
             "Reset at midnight",
             "Reset when Lord of the Mountain appears"
         ];
-    }
-    public string ResetType
-    {
-        get => ResetTypes[flag.ResetType];
-        set => this.RaiseAndSetIfChanged(ref flag.ResetType, ResetTypes.IndexOf(value));
     }
     public bool CanConfirm
     {
