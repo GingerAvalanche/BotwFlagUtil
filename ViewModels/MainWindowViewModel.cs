@@ -35,6 +35,7 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref title, value);
     }
     public SelectionModel<string> FlagNameSelection { get; }
+    public bool NeedsSave { get; private set; }
 
 #region Current Flag Fields
         private string currentFlagName = string.Empty;
@@ -247,6 +248,7 @@ public class MainWindowViewModel : ViewModelBase
         }
         flagNamesTemp.Sort();
         FlagNames = flagNamesTemp;
+        NeedsSave = true;
     }
 
     public void Export()
@@ -289,6 +291,20 @@ public class MainWindowViewModel : ViewModelBase
                     FlagNames = flagNamesTemp;
                 }
             }
+        }
+    }
+
+    public void Save()
+    {
+        if (Helpers.RootDir != null)
+        {
+            string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
+            if (!File.Exists(bootupPath))
+            {
+                File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
+            }
+            generator.mgr.Write(bootupPath);
+            NeedsSave = false;
         }
     }
 }
