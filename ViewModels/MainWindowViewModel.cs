@@ -92,7 +92,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             try {
                 FlagUnion initValue = FlagUnion.FromString(InitValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.InitValue, initValue);
+                this.RaiseAndSetIfChanged(ref flag.initValue, initValue);
                 CanConfirmInit = true;
             }
             catch (FormatException)
@@ -117,7 +117,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             try {
                 FlagUnion initValue = FlagUnion.FromString(BoundingValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.MaxValue, initValue);
+                this.RaiseAndSetIfChanged(ref flag.maxValue, initValue);
                 CanConfirmMax = true;
             }
             catch (FormatException)
@@ -133,7 +133,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             try {
                 FlagUnion initValue = FlagUnion.FromString(BoundingValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.MinValue, initValue);
+                this.RaiseAndSetIfChanged(ref flag.minValue, initValue);
                 CanConfirmMin = true;
             }
             catch (FormatException)
