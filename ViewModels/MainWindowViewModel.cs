@@ -13,6 +13,7 @@ namespace BotwFlagUtil.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
+    private string title = "BotwFlagUtil";
     private readonly Generator generator = new();
     private bool skipSelectionChangedEvent = false;
 
@@ -28,6 +29,11 @@ public class MainWindowViewModel : ViewModelBase
         ];
     private FlagStringType stringType = FlagStringType.None;
     
+    public string Title
+    {
+        get => title;
+        set => this.RaiseAndSetIfChanged(ref title, value);
+    }
     public SelectionModel<string> FlagNameSelection { get; }
 
 #region Current Flag Fields
@@ -222,6 +228,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             return;
         }
+        Title = $"BotwFlagUtil - {Path.GetFileName(rootDir)}";
         Helpers.RootDir = rootDir;
 
         generator.GenerateEventFlags();
