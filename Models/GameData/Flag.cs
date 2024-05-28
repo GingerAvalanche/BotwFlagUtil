@@ -13,32 +13,18 @@ namespace BotwFlagUtil.GameData
     {
         private string dataName;
         private NintendoHash hashValue;
-        [JsonInclude]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public int? Category;
-        [JsonInclude]
-        private readonly int DeleteRev;
-        [JsonInclude]
-        public FlagUnion InitValue;
-        [JsonInclude]
-        public bool IsEventAssociated;
-        [JsonInclude]
-        public bool IsOneTrigger;
-        [JsonInclude]
-        public bool IsProgramReadable;
-        [JsonInclude]
-        public bool IsProgramWritable;
-        [JsonInclude]
-        public bool IsSave;
-        [JsonInclude]
-        public FlagUnion MaxValue;
-        [JsonInclude]
-        public FlagUnion MinValue;
-        [JsonInclude]
-        public int ResetType;
-        [JsonInclude]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public bool? IsRevival;
+        private int? category;
+        private readonly int deleteRev;
+        public FlagUnion initValue;
+        private bool isEventAssociated;
+        private bool isOneTrigger;
+        private bool isProgramReadable;
+        private bool isProgramWritable;
+        private bool isSave;
+        public FlagUnion maxValue;
+        public FlagUnion minValue;
+        private int resetType;
+        private bool? isRevival;
 
         [JsonConstructor]
         public Flag(
@@ -60,18 +46,18 @@ namespace BotwFlagUtil.GameData
         {
             this.dataName = dataName;
             this.hashValue = hashValue;
-            Category = category;
-            DeleteRev = deleteRev;
-            InitValue = initValue;
-            IsEventAssociated = isEventAssociated;
-            IsOneTrigger = isOneTrigger;
-            IsProgramReadable = isProgramReadable;
-            IsProgramWritable = isProgramWritable;
-            IsSave = isSave;
-            MaxValue = maxValue;
-            MinValue = minValue;
-            ResetType = resetType;
-            IsRevival = isRevival;
+            this.category = category;
+            this.deleteRev = deleteRev;
+            this.initValue = initValue;
+            this.isEventAssociated = isEventAssociated;
+            this.isOneTrigger = isOneTrigger;
+            this.isProgramReadable = isProgramReadable;
+            this.isProgramWritable = isProgramWritable;
+            this.isSave = isSave;
+            this.maxValue = maxValue;
+            this.minValue = minValue;
+            this.resetType = resetType;
+            this.isRevival = isRevival;
         }
 
         public Flag(
@@ -91,19 +77,19 @@ namespace BotwFlagUtil.GameData
             DataName = dataName;
             if (type != FlagUnionType.None)
             {
-                DeleteRev = deleteRev;
+                this.deleteRev = deleteRev;
                 FlagUnionType initType = Helpers.mainTypeToInitType[type];
-                InitValue = initType;
-                IsEventAssociated = isEventAssociated;
-                IsOneTrigger = isOneTrigger;
-                IsProgramReadable = isProgramReadable;
-                IsProgramWritable = isProgramWritable;
-                IsSave = isSave;
+                initValue = initType;
+                this.isEventAssociated = isEventAssociated;
+                this.isOneTrigger = isOneTrigger;
+                this.isProgramReadable = isProgramReadable;
+                this.isProgramWritable = isProgramWritable;
+                this.isSave = isSave;
                 FlagUnionType boundingtype = Helpers.mainTypeToMaxOrMinType[type];
-                MaxValue = boundingtype;
-                MinValue = boundingtype;
-                ResetType = resetType;
-                IsRevival = isRevival;
+                maxValue = boundingtype;
+                minValue = boundingtype;
+                this.resetType = resetType;
+                this.isRevival = isRevival;
             }
         }
 
@@ -121,37 +107,37 @@ namespace BotwFlagUtil.GameData
                         hashValue = node.GetInt();
                         break;
                     case "InitValue":
-                        InitValue = node.GetFlagUnion(Helpers.mainTypeToInitType[type], stringTable);
+                        initValue = node.GetFlagUnion(Helpers.mainTypeToInitType[type], stringTable);
                         break;
                     case "IsEventAssociated":
-                        IsEventAssociated = node.GetBool();
+                        isEventAssociated = node.GetBool();
                         break;
                     case "IsOneTrigger":
-                        IsOneTrigger = node.GetBool();
+                        isOneTrigger = node.GetBool();
                         break;
                     case "IsProgramReadable":
-                        IsProgramReadable = node.GetBool();
+                        isProgramReadable = node.GetBool();
                         break;
                     case "IsProgramWritable":
-                        IsProgramWritable = node.GetBool();
+                        isProgramWritable = node.GetBool();
                         break;
                     case "IsSave":
-                        IsSave = node.GetBool();
+                        isSave = node.GetBool();
                         break;
                     case "MaxValue":
-                        MaxValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type], stringTable);
+                        maxValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type], stringTable);
                         break;
                     case "MinValue":
-                        MinValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type], stringTable);
+                        minValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type], stringTable);
                         break;
                     case "ResetType":
-                        ResetType = node.GetInt();
+                        resetType = node.GetInt();
                         break;
                     default:
                         break;
                 }
             }
-            IsRevival = isRevival;
+            this.isRevival = isRevival;
         }
 
         public Flag(Byml byml, FlagUnionType type, bool? isRevival = null)
@@ -168,37 +154,37 @@ namespace BotwFlagUtil.GameData
                         hashValue = node.GetInt();
                         break;
                     case "InitValue":
-                        InitValue = node.GetFlagUnion(Helpers.mainTypeToInitType[type]);
+                        initValue = node.GetFlagUnion(Helpers.mainTypeToInitType[type]);
                         break;
                     case "IsEventAssociated":
-                        IsEventAssociated = node.GetBool();
+                        isEventAssociated = node.GetBool();
                         break;
                     case "IsOneTrigger":
-                        IsOneTrigger = node.GetBool();
+                        isOneTrigger = node.GetBool();
                         break;
                     case "IsProgramReadable":
-                        IsProgramReadable = node.GetBool();
+                        isProgramReadable = node.GetBool();
                         break;
                     case "IsProgramWritable":
-                        IsProgramWritable = node.GetBool();
+                        isProgramWritable = node.GetBool();
                         break;
                     case "IsSave":
-                        IsSave = node.GetBool();
+                        isSave = node.GetBool();
                         break;
                     case "MaxValue":
-                        MaxValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type]);
+                        maxValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type]);
                         break;
                     case "MinValue":
-                        MinValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type]);
+                        minValue = node.GetFlagUnion(Helpers.mainTypeToMaxOrMinType[type]);
                         break;
                     case "ResetType":
-                        ResetType = node.GetInt();
+                        resetType = node.GetInt();
                         break;
                     default:
                         break;
                 }
             }
-            IsRevival = isRevival;
+            this.isRevival = isRevival;
         }
 
         public string DataName
@@ -211,6 +197,29 @@ namespace BotwFlagUtil.GameData
             }
         }
         public readonly NintendoHash HashValue { get => hashValue; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? Category { readonly get => category; set => category = value; }
+        public readonly int DeleteRev { get => deleteRev; }
+        public FlagUnion InitValue { readonly get => initValue; set => initValue = value; }
+        public bool IsEventAssociated
+        {
+            readonly get => isEventAssociated; set => isEventAssociated = value;
+        }
+        public bool IsOneTrigger { readonly get => isOneTrigger; set => isOneTrigger = value; }
+        public bool IsProgramReadable
+        {
+            readonly get => isProgramReadable; set => isProgramReadable = value;
+        }
+        public bool IsProgramWritable
+        {
+            readonly get => isProgramWritable; set => isProgramWritable = value;
+        }
+        public bool IsSave { readonly get => isSave; set => isSave = value; }
+        public FlagUnion MaxValue { readonly get => maxValue; set => maxValue = value; }
+        public FlagUnion MinValue { readonly get => minValue; set => minValue = value; }
+        public int ResetType { get; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? IsRevival { readonly get => isRevival; set => isRevival = value; }
 
         public static bool operator ==(Flag first, Flag second) => first.Equals(second);
         public static bool operator !=(Flag first, Flag second) => !first.Equals(second);
@@ -229,17 +238,17 @@ namespace BotwFlagUtil.GameData
             Dictionary<string, Byml> map = new()
             {
                 { "DataName", dataName },
-                { "DeleteRev", DeleteRev },
+                { "DeleteRev", deleteRev },
                 { "HashValue", hashValue.ivalue },
-                { "InitValue", InitValue.ToByml() },
-                { "IsEventAssociated", IsEventAssociated },
-                { "IsOneTrigger", IsOneTrigger },
-                { "IsProgramReadable", IsProgramReadable },
-                { "IsProgramWritable", IsProgramWritable },
-                { "IsSave", IsSave },
-                { "MaxValue", MaxValue.ToByml() },
-                { "MinValue", MinValue.ToByml() },
-                { "ResetType", ResetType },
+                { "InitValue", initValue.ToByml() },
+                { "IsEventAssociated", isEventAssociated },
+                { "IsOneTrigger", isOneTrigger },
+                { "IsProgramReadable", isProgramReadable },
+                { "IsProgramWritable", isProgramWritable },
+                { "IsSave", isSave },
+                { "MaxValue", maxValue.ToByml() },
+                { "MinValue", minValue.ToByml() },
+                { "ResetType", resetType },
             };
             return map;
         }
@@ -256,12 +265,12 @@ namespace BotwFlagUtil.GameData
         public readonly bool Equals(Flag other)
         {
             return hashValue == other.hashValue &&
-                IsEventAssociated == other.IsEventAssociated &&
-                IsOneTrigger == other.IsOneTrigger &&
-                IsProgramReadable == other.IsProgramReadable &&
-                IsProgramWritable == other.IsProgramWritable &&
-                IsSave == other.IsSave &&
-                ResetType == other.ResetType;
+                isEventAssociated == other.isEventAssociated &&
+                isOneTrigger == other.isOneTrigger &&
+                isProgramReadable == other.isProgramReadable &&
+                isProgramWritable == other.isProgramWritable &&
+                isSave == other.isSave &&
+                resetType == other.resetType;
         }
 
         public readonly override bool Equals(object? obj) => obj is Flag flag && Equals(flag);
@@ -272,17 +281,17 @@ namespace BotwFlagUtil.GameData
         {
             return $"""
                 - DataName: {dataName}
-                  DeleteRev: {DeleteRev}
+                  DeleteRev: {deleteRev}
                   HashValue: {hashValue}
-                  InitValue: {InitValue}
-                  IsEventAssociated: {IsEventAssociated}
-                  IsOneTrigger: {IsOneTrigger}
-                  IsProgramReadable: {IsProgramReadable}
-                  IsProgramWritable: {IsProgramWritable}
-                  IsSave: {IsSave}
-                  MaxValue: {MaxValue}
-                  MinValue: {MinValue}
-                  ResetType: {ResetType}
+                  InitValue: {initValue}
+                  IsEventAssociated: {isEventAssociated}
+                  IsOneTrigger: {isOneTrigger}
+                  IsProgramReadable: {isProgramReadable}
+                  IsProgramWritable: {isProgramWritable}
+                  IsSave: {isSave}
+                  MaxValue: {maxValue}
+                  MinValue: {minValue}
+                  ResetType: {resetType}
                 """;
         }
     }
