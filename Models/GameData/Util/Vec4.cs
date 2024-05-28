@@ -26,7 +26,7 @@ namespace BotwFlagUtil.GameData.Util
         public Vec4(string s)
         {
             float[] floats = s[1..^1].Split(",").Select(float.Parse).ToArray();
-            if (floats.Length != 4) throw new ArgumentException($"Must be length 4, was length {s}", nameof(s));
+            if (floats.Length != 4) throw new FormatException($"Must be length 4, was length {s}");
             _x = floats[0];
             _y = floats[1];
             _z = floats[2];

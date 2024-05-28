@@ -20,7 +20,7 @@ namespace BotwFlagUtil.GameData.Util
         public Vec2(string s)
         {
             float[] floats = s[1..^1].Split(",").Select(float.Parse).ToArray();
-            if (floats.Length != 2) throw new ArgumentException($"Must be length 2, was {s}", nameof(s));
+            if (floats.Length != 2) throw new FormatException($"Must be length 2, was {s}");
             _x = floats[0];
             _y = floats[1];
         }
