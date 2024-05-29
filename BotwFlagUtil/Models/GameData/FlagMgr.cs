@@ -185,7 +185,12 @@ namespace BotwFlagUtil.GameData
             return _flags.Any(kvp => kvp.Value.Remove(flag)) && _hashes.Remove(flag.HashValue);
         }
 
-        public bool TryRetrieve(string flagName, out Flag flag, out FlagStringType stringType)
+        public bool TryRetrieve(
+            string flagName,
+            out Flag flag,
+            out FlagUnionType flagType,
+            out FlagStringType stringType
+        )
         {
             foreach ((string key, HashSet<Flag> flags) in _flags)
             {
@@ -193,11 +198,13 @@ namespace BotwFlagUtil.GameData
                 {
                     flags.Remove(flag);
                     _hashes.Remove(flag.HashValue);
+                    flagType = Helpers.keyToFlagType[key];
                     stringType = Helpers.keyToStringType[key];
                     return true;
                 }
             }
             flag = default;
+            flagType = FlagUnionType.None;
             stringType = FlagStringType.None;
             return false;
         }
