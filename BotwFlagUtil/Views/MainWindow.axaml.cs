@@ -119,13 +119,13 @@ public partial class MainWindow : Window
     private async Task<ButtonResult> DiscardConfirmationDialogue()
     {
         return await MessageBoxManager.GetMessageBoxStandard(
-                new MessageBoxStandardParams()
-                {
-                    ButtonDefinitions = ButtonEnum.YesNo,
-                    ContentTitle = "Discard Changes",
-                    ContentMessage = "You are about to discard unsaved changes. Continue?",
-                    WindowIcon = icon,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                }).ShowWindowDialogAsync(this);
+            new MessageBoxStandardParams()
+            {
+                ButtonDefinitions = ButtonEnum.YesNo,
+                ContentTitle = "Discard Changes",
+                ContentMessage = "You are about to discard unsaved changes. Continue?",
+                WindowIcon = icon,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            }).ShowWindowDialogAsync(this);
     }
 }
