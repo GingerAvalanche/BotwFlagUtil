@@ -60,24 +60,6 @@ public class MainWindowViewModel : ViewModelBase
         get => flagsWithCategory
             .Any(s => flag.DataName?.StartsWith(s, StringComparison.Ordinal) ?? false);
     }
-    public string[] FlagTypes
-    {
-        get => [
-            "Bool",
-            "BoolArray",
-            "F32",
-            "F32Array",
-            "S32",
-            "S32Array",
-            "String",
-            "StringArray",
-            "Vec2",
-            "Vec2Array",
-            "Vec3",
-            "Vec3Array",
-            "Vec4"
-        ];
-    }
     public string FlagType
     {
         get => flagType.ToString();
