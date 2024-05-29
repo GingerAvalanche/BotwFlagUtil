@@ -33,10 +33,9 @@
     </Menu>
     <Grid Grid.Row="1" ColumnDefinitions="200,4,*">
       <ListBox Grid.Column="0"
-          ItemsSource="{Binding FlagNames}"
-          Selection="{Binding FlagNameSelection}"
-          SelectionMode="Single,AlwaysSelected">
-      </ListBox>
+               ItemsSource="{Binding FlagNames}"
+               Selection="{Binding FlagNameSelection}"
+               SelectionMode="Single,AlwaysSelected"/>
       
       <GridSplitter Grid.Column="1" Background="DarkGray" ResizeDirection="Columns"/>
 
