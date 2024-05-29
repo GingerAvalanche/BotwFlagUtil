@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls.Selection;
+using Avalonia.Media;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
 using ReactiveUI;
@@ -50,6 +51,24 @@ public class MainWindowViewModel : ViewModelBase
 #endregion
 
 #region Current Flag Properties
+
+    public IImmutableSolidColorBrush GetBackgroundColor(string flagName)
+    {
+        return confirmeds[flagName] ? Brushes.Green : Brushes.Transparent;
+    }
+
+    public IImmutableSolidColorBrush GetForegroundColor(string flagName)
+    {
+        return confidences[flagName] switch
+        {
+            GeneratorConfidence.Bad => Brushes.Red,
+            GeneratorConfidence.Mediocre => Brushes.Yellow,
+            GeneratorConfidence.Good => Brushes.Green,
+            GeneratorConfidence.Definite => Brushes.Blue,
+            _ => Brushes.Violet,
+        };
+    }
+
     public List<string> FlagNames
     {
         get => flagNames;
