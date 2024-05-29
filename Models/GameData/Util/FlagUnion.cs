@@ -355,7 +355,7 @@ namespace BotwFlagUtil.GameData.Util
                 FlagUnionType.Vec3 => $"{vec3Value!.Value}",
                 FlagUnionType.Vec3Array => $"[{string.Join(", ", vec3ArrayValue!)}]",
                 FlagUnionType.Vec4 => $"{vec4Value!.Value}",
-                _ => throw new InvalidOperationException("FlagUnionType.None should never be instantiated"),
+                _ => "",
             };
         }
 
