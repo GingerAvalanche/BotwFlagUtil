@@ -54,7 +54,8 @@ public class MainWindowViewModel : ViewModelBase
     }
     public bool UseCategory
     {
-        get => flagsWithCategory.Any(s => flag.DataName.StartsWith(s, StringComparison.Ordinal));
+        get => flagsWithCategory
+            .Any(s => flag.DataName?.StartsWith(s, StringComparison.Ordinal) ?? false);
     }
     public string[] FlagTypes
     {
