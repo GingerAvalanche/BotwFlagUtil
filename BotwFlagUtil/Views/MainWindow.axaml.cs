@@ -8,16 +8,23 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace BotwFlagUtil.Views;
 
 public partial class MainWindow : Window
 {
+    readonly WindowIcon icon;
     public MainWindow()
     {
         InitializeComponent(true);
 
         DataContext = new MainWindowViewModel();
+
+        using (var streamReader = AssetLoader.Open(new("avares://BotwFlagUtil/Assets/icon.png")))
+        {
+            icon = new(streamReader);
+        }
 
         About.Click += About_Click;
         Exit.Click += Exit_Click;
@@ -31,14 +38,9 @@ public partial class MainWindow : Window
     private async void About_Click(object? sender, RoutedEventArgs e)
     {
         string message;
-        WindowIcon icon;
         using (var streamReader = new StreamReader(AssetLoader.Open(new("avares://BotwFlagUtil/Assets/about.md"))))
         {
             message = streamReader.ReadToEnd();
-        }
-        using (var streamReader = AssetLoader.Open(new("avares://BotwFlagUtil/Assets/icon.png")))
-        {
-            icon = new(streamReader);
         }
         await MessageBoxManager.GetMessageBoxStandard(
             new MessageBoxStandardParams()
@@ -56,22 +58,13 @@ public partial class MainWindow : Window
 
     private async void Exit_Click(object? sender, RoutedEventArgs e)
     {
-        if ((DataContext as MainWindowViewModel)!.NeedsSave)
+        if (((MainWindowViewModel)DataContext!).NeedsSave &&
+            await DiscardConfirmationDialogue() == ButtonResult.No)
         {
-            ButtonResult result = await MessageBoxManager.GetMessageBoxStandard(
-                new MessageBoxStandardParams()
-                {
-                    ButtonDefinitions = ButtonEnum.YesNo,
-                    ContentTitle = "Discard Changes",
-                    ContentMessage = "You are about to discard unsaved changes. Continue?",
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                }).ShowWindowDialogAsync(this);
-            if (result == ButtonResult.No)
-            {
-                return;
-            }
+            return;
         }
-        if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
+        if (Avalonia.Application.Current!.ApplicationLifetime is
+            IClassicDesktopStyleApplicationLifetime desktopLifetime)
         {
             desktopLifetime.Shutdown();
         }
@@ -79,30 +72,20 @@ public partial class MainWindow : Window
 
     private void Export_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as MainWindowViewModel)!.Export();
+        ((MainWindowViewModel)DataContext!).Export();
     }
 
     private void Import_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as MainWindowViewModel)!.Import();
+        ((MainWindowViewModel)DataContext!).Import();
     }
 
     private async void Open_ClickAsync(object? sender, RoutedEventArgs e)
     {
-        if ((DataContext as MainWindowViewModel)!.NeedsSave)
+        MainWindowViewModel vm = (MainWindowViewModel)DataContext!;
+        if (vm.NeedsSave && await DiscardConfirmationDialogue() == ButtonResult.No)
         {
-            var result = MessageBoxManager.GetMessageBoxStandard(
-                new MessageBoxStandardParams()
-                {
-                    ButtonDefinitions = ButtonEnum.YesNo,
-                    ContentTitle = "Discard Changes",
-                    ContentMessage = "You are about to discard unsaved changes. Continue?",
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                }).ShowWindowDialogAsync(this);
-            if (result.Result == ButtonResult.No)
-            {
-                return;
-            }
+            return;
         }
         var selection = await StorageProvider.OpenFolderPickerAsync(
                 new()
@@ -118,17 +101,31 @@ public partial class MainWindow : Window
         string folder = Uri.UnescapeDataString(selection[0].Path.AbsolutePath);
         if (!string.IsNullOrEmpty(folder))
         {
-            (DataContext as MainWindowViewModel)!.OpenMod(folder);
+            vm.OpenMod(folder);
         }
     }
 
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
-        (DataContext as MainWindowViewModel)!.Save();
+        MainWindowViewModel vm = (MainWindowViewModel)DataContext!;
+        vm.Save();
     }
 
-    private async void Settings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Settings_Click(object? sender, RoutedEventArgs e)
     {
         await new SettingsWindow().ShowDialog(this);
+    }
+
+    private async Task<ButtonResult> DiscardConfirmationDialogue()
+    {
+        return await MessageBoxManager.GetMessageBoxStandard(
+                new MessageBoxStandardParams()
+                {
+                    ButtonDefinitions = ButtonEnum.YesNo,
+                    ContentTitle = "Discard Changes",
+                    ContentMessage = "You are about to discard unsaved changes. Continue?",
+                    WindowIcon = icon,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                }).ShowWindowDialogAsync(this);
     }
 }
