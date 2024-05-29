@@ -54,11 +54,11 @@ public partial class MainWindow : Window
             }).ShowWindowDialogAsync(this);
     }
 
-    private void Exit_Click(object? sender, RoutedEventArgs e)
+    private async void Exit_Click(object? sender, RoutedEventArgs e)
     {
         if ((DataContext as MainWindowViewModel)!.NeedsSave)
         {
-            var result = MessageBoxManager.GetMessageBoxStandard(
+            ButtonResult result = await MessageBoxManager.GetMessageBoxStandard(
                 new MessageBoxStandardParams()
                 {
                     ButtonDefinitions = ButtonEnum.YesNo,
@@ -66,7 +66,7 @@ public partial class MainWindow : Window
                     ContentMessage = "You are about to discard unsaved changes. Continue?",
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 }).ShowWindowDialogAsync(this);
-            if (result.Result == ButtonResult.No)
+            if (result == ButtonResult.No)
             {
                 return;
             }
