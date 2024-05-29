@@ -15,14 +15,14 @@ namespace BotwFlagUtil.GameData
         private NintendoHash hashValue = 0;
         private int? category = null;
         private readonly int deleteRev = -1;
-        public FlagUnion initValue = default;
+        private FlagUnion initValue = default;
         private bool isEventAssociated = false;
         private bool isOneTrigger = false;
         private bool isProgramReadable = false;
         private bool isProgramWritable = false;
         private bool isSave = false;
-        public FlagUnion maxValue = default;
-        public FlagUnion minValue = default;
+        private FlagUnion maxValue = default;
+        private FlagUnion minValue = default;
         private int resetType = 0;
         private bool? isRevival = null;
 
