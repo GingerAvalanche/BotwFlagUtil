@@ -91,7 +91,7 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string InitValue
     {
-        get => initValue = flag.InitValue.ToString();
+        get => initValue;
         set
         {
             this.RaiseAndSetIfChanged(ref initValue, value);
@@ -121,7 +121,7 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string MaxValue
     {
-        get => maxValue = flag.MaxValue.ToString();
+        get => maxValue;
         set
         {
             this.RaiseAndSetIfChanged(ref maxValue, value);
@@ -142,7 +142,7 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string MinValue
     {
-        get => minValue = flag.MinValue.ToString();
+        get => minValue;
         set
         {
             this.RaiseAndSetIfChanged(ref minValue, value);
@@ -222,15 +222,27 @@ public class MainWindowViewModel : ViewModelBase
         }
         else if (e.SelectedItems.Single() is string nextFlagName &&
             nextFlagName != currentFlagName && 
-            generator.mgr.TryRetrieve(nextFlagName, out Flag flag, out FlagStringType type))
+            generator.mgr.TryRetrieve(
+                nextFlagName, out Flag flag, out FlagUnionType fType, out FlagStringType sType
+            ))
         {
             if (Flag.HashValue != 0)
             {
                 generator.mgr.Add(Flag, stringType);
             }
             Flag = flag;
+            flagType = fType;
+            stringType = sType;
             currentFlagName = nextFlagName;
-            stringType = type;
+            initValue = flag.InitValue.ToString();
+            maxValue = flag.MaxValue.ToString();
+            minValue = flag.MinValue.ToString();
+
+            // Bit of a workaround to keep the extra behavior of the properties from running
+            this.RaisePropertyChanged(nameof(FlagType));
+            this.RaisePropertyChanged(nameof(InitValue));
+            this.RaisePropertyChanged(nameof(MaxValue));
+            this.RaisePropertyChanged(nameof(MinValue));
         }
     }
 
