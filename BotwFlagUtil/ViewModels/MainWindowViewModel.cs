@@ -328,7 +328,9 @@ public class MainWindowViewModel : ViewModelBase
             {
                 File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
             }
+            generator.mgr.Add(flag);
             generator.mgr.Write(bootupPath);
+            generator.mgr.Remove(flag.DataName);
             NeedsSave = false;
         }
     }
