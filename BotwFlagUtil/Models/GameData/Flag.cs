@@ -275,7 +275,7 @@ namespace BotwFlagUtil.GameData
 
         public readonly override bool Equals(object? obj) => obj is Flag flag && Equals(flag);
 
-        public readonly override int GetHashCode() => hashValue.GetHashCode();
+        public readonly override int GetHashCode() => hashValue.ivalue;
 
         public readonly override string ToString()
         {
