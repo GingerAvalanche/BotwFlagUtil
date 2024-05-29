@@ -258,6 +258,7 @@ public class MainWindowViewModel : ViewModelBase
         Title = $"BotwFlagUtil - {Path.GetFileName(rootDir)}";
         Helpers.RootDir = rootDir;
 
+        generator.ReplaceManager(new());
         generator.GenerateEventFlags();
         generator.GenerateItemFlags();
         generator.GenerateMapFlags();
