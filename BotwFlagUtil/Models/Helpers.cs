@@ -64,6 +64,7 @@ namespace BotwFlagUtil
         };
         public static Dictionary<FlagUnionType, FlagUnionType> mainTypeToInitType = new()
         {
+            { FlagUnionType.None, FlagUnionType.None },
             { FlagUnionType.Bool, FlagUnionType.S32 },
             { FlagUnionType.BoolArray, FlagUnionType.S32Array },
             { FlagUnionType.F32, FlagUnionType.F32 },
@@ -80,6 +81,7 @@ namespace BotwFlagUtil
         };
         public static Dictionary<FlagUnionType, FlagUnionType> mainTypeToMaxOrMinType = new()
         {
+            { FlagUnionType.None, FlagUnionType.None },
             { FlagUnionType.Bool, FlagUnionType.Bool },
             { FlagUnionType.BoolArray, FlagUnionType.Bool },
             { FlagUnionType.F32, FlagUnionType.F32 },
