@@ -1,0 +1,177 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        xmlns:vm="using:BotwFlagUtil.ViewModels"
+        xmlns:sys="using:System"
+        x:Class="BotwFlagUtil.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        x:CompileBindings="True"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Settings"
+        MinHeight="400">
+  <Grid RowDefinitions="1*,30"
+        Margin="20">
+    <Grid Grid.Row="0"
+          RowDefinitions="50,50,50,50,50,1*"
+          ColumnDefinitions="70,30,1*,80">
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
+                 VerticalAlignment="Center">Game:</TextBlock>
+      <Image Grid.Row="0"
+             Grid.Column="1"
+             Source="/Assets/red_x.png"
+             Name="GameDirInvalid"/>
+      <Image Grid.Row="0"
+             Grid.Column="1"
+             Source="/Assets/checkmark.png"
+             IsVisible="False"
+             Name="GameDirValid"/>
+      <TextBox Grid.Row="0"
+               Grid.Column="2"
+               Height="30"
+               Name="GameDir"
+               Text="{Binding GameDir}"/>
+      <Button Grid.Row="0"
+              Grid.Column="3"
+              Name="GameBrowse">
+        Browse...
+      </Button>
+      <TextBlock Grid.Row="1"
+                 Grid.Column="0"
+                 VerticalAlignment="Center">Update:</TextBlock>
+      <Image Grid.Row="1"
+             Grid.Column="1"
+             Source="/Assets/red_x.png"
+             Name="UpdateDirInvalid"/>
+      <Image Grid.Row="1"
+             Grid.Column="1"
+             Source="/Assets/checkmark.png"
+             IsVisible="False"
+             Name="UpdateDirValid"/>
+      <TextBox Grid.Row="1"
+               Grid.Column="2"
+               Height="30"
+               Name="UpdateDir"
+               Text="{Binding UpdateDir}"/>
+      <Button Grid.Row="1"
+              Grid.Column="3"
+              Name="UpdateBrowse">
+        Browse...
+      </Button>
+      <TextBlock Grid.Row="2"
+                 Grid.Column="0"
+                 VerticalAlignment="Center">Dlc:</TextBlock>
+      <Image Grid.Row="2"
+             Grid.Column="1"
+             Source="/Assets/red_x.png"
+             Name="DlcDirInvalid"/>
+      <Image Grid.Row="2"
+             Grid.Column="1"
+             Source="/Assets/checkmark.png"
+             IsVisible="False"
+             Name="DlcDirValid"/>
+      <TextBox Grid.Row="2"
+               Grid.Column="2"
+               Height="30"
+               Name="DlcDir"
+               Text="{Binding DlcDir}"/>
+      <Button Grid.Row="2"
+              Grid.Column="3"
+              Name="DlcBrowse">
+        Browse...
+      </Button>
+      <TextBlock Grid.Row="3"
+                 Grid.Column="0"
+                 VerticalAlignment="Center">GameNx:</TextBlock>
+      <Image Grid.Row="3"
+             Grid.Column="1"
+             Source="/Assets/red_x.png"
+             Name="GameDirNxInvalid"/>
+      <Image Grid.Row="3"
+             Grid.Column="1"
+             Source="/Assets/checkmark.png"
+             IsVisible="False"
+             Name="GameDirNxValid"/>
+      <TextBox Grid.Row="3"
+               Grid.Column="2"
+               Height="30"
+               Name="GameDirNx"
+               Text="{Binding GameDirNx}"/>
+      <Button Grid.Row="3"
+              Grid.Column="3"
+              Name="GameNxBrowse">
+        Browse...
+      </Button>
+      <TextBlock Grid.Row="4"
+                 Grid.Column="0"
+                 VerticalAlignment="Center">DlcNx:</TextBlock>
+      <Image Grid.Row="4"
+             Grid.Column="1"
+             Source="/Assets/red_x.png"
+             Name="DlcDirNxInvalid"/>
+      <Image Grid.Row="4"
+             Grid.Column="1"
+             Source="/Assets/checkmark.png"
+             IsVisible="False"
+             Name="DlcDirNxValid"/>
+      <TextBox Grid.Row="4"
+               Grid.Column="2"
+               Height="30"
+               Name="DlcDirNx"
+               Text="{Binding DlcDirNx}"/>
+      <Button Grid.Row="4"
+              Grid.Column="3"
+              Name="DlcNxBrowse">
+        Browse...
+      </Button>
+      <TextBlock Grid.Row="5"
+                 VerticalAlignment="Center">
+        Theme:
+      </TextBlock>
+      <StackPanel Grid.Row="5"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right">
+        <RadioButton GroupName="Theme"
+                     Content="Light"
+                     Command="{Binding OnThemeSelected}"
+                     IsChecked="{Binding LightTheme}">
+          <RadioButton.CommandParameter>
+            <sys:Int32>1</sys:Int32>
+          </RadioButton.CommandParameter>
+        </RadioButton>
+        <Separator Grid.Row="1"
+                   Grid.Column="1"
+                   Background="Transparent"/>
+        <RadioButton GroupName="Theme"
+                     Content="Dark"
+                     Command="{Binding OnThemeSelected}"
+                     IsChecked="{Binding DarkTheme}">
+          <RadioButton.CommandParameter>
+            <sys:Int32>0</sys:Int32>
+          </RadioButton.CommandParameter>
+        </RadioButton>
+      </StackPanel>
+    </Grid>
+    <Grid Grid.Row="3"
+          ColumnDefinitions="1*,80,80">
+      <Button Grid.Column="1"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              VerticalAlignment="Stretch"
+              Name="SaveButton">
+        Save
+      </Button>
+      <Button Grid.Column="2"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              VerticalAlignment="Stretch"
+              Name="CancelButton">
+        Cancel
+      </Button>
+    </Grid>
+  </Grid>
+</Window>
