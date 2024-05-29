@@ -57,8 +57,13 @@ namespace BotwFlagUtil
         {
             string? flagName;
             // TODO: Handle event packs in titlebg (and bootup?)
+            string path = Helpers.GetFullModPath("Event");
+            if (!Directory.Exists(path))
+            {
+                return;
+            }
             foreach (string fileName in Directory.GetFiles(
-                Helpers.GetFullModPath("Event"), "*.sbeventpack"
+                path, "*.sbeventpack"
             ))
             {
                 RevrsReader reader = new(Yaz0.Decompress(File.ReadAllBytes(fileName)));
@@ -505,8 +510,13 @@ namespace BotwFlagUtil
             {
                 throw new InvalidOperationException("Evaluating maps before setting root directory!");
             }
+            string actorPath = Helpers.GetFullModPath("Actor/Pack");
+            if (!Directory.Exists(actorPath))
+            {
+                return;
+            }
             foreach (string path in Directory.EnumerateFiles(
-                Helpers.GetFullModPath("Actor/Pack"), "*.sbactorpack"
+                actorPath, "*.sbactorpack"
             ))
             {
                 string actorName = Path.GetFileNameWithoutExtension(path);
@@ -868,27 +878,31 @@ namespace BotwFlagUtil
         public void GenerateMapFlags()
         {
             EnumerationOptions options = new() { RecurseSubdirectories = true };
-            foreach (string path in Directory.EnumerateFiles(
-                Helpers.GetFullModPath("Map/MainField"), "*_*.smubin", options
-            ))
+            string mainfieldPath = Helpers.GetFullModPath("Map/MainField");
+            if (Directory.Exists(mainfieldPath))
             {
-                Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(path));
-                RevrsReader reader = new(bytes, Helpers.ModEndianness);
-                ImmutableByml modMap = new(ref reader);
-                if (!Helpers.GetStockMainFieldMapReader(
-                    Path.GetFileName(path), out RevrsReader stockReader
+                foreach (string path in Directory.EnumerateFiles(
+                    mainfieldPath, "*_*.smubin", options
                 ))
                 {
-                    throw new InvalidDataException(
-                        $"Vanilla counterpart not found for {Path.GetFileNameWithoutExtension(path)}"
+                    Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(path));
+                    RevrsReader reader = new(bytes, Helpers.ModEndianness);
+                    ImmutableByml modMap = new(ref reader);
+                    if (!Helpers.GetStockMainFieldMapReader(
+                        Path.GetFileName(path), out RevrsReader stockReader
+                    ))
+                    {
+                        throw new InvalidDataException(
+                            $"Vanilla counterpart not found for {Path.GetFileNameWithoutExtension(path)}"
+                        );
+                    }
+                    GenerateFlagsForMapWithDiff(
+                        modMap,
+                        new(ref stockReader),
+                        MapType.MainField,
+                        Path.GetFileName(path).Split('_')[0]
                     );
                 }
-                GenerateFlagsForMapWithDiff(
-                    modMap,
-                    new(ref stockReader),
-                    MapType.MainField,
-                    Path.GetFileName(path).Split('_')[0]
-                );
             }
 
             string mainStaticPath = Helpers.GetFullModPath("Map/MainField/Static.smubin");
@@ -897,10 +911,14 @@ namespace BotwFlagUtil
                 GenerateMainStaticFlags(mainStaticPath);
             }
 
-#pragma warning disable CS8604 // RootDir is not null, Helpers.GetFullModPath checks it
+            string packPath = Helpers.GetFullModPath("Pack");
+            if (!Directory.Exists(packPath))
+            {
+                return;
+            }
             foreach (string path in Directory.EnumerateFiles(
-                Helpers.RootDir,
-                "Pack/Dungeon*.pack",
+                packPath,
+                "Dungeon*.pack",
                 options
             ))
             {
@@ -934,7 +952,6 @@ namespace BotwFlagUtil
                     }
                 }
             }
-#pragma warning restore CS8604
         }
 
         private static string GetNearestDungeonName(ImmutableByml byml)
