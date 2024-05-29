@@ -40,6 +40,9 @@ public class MainWindowViewModel : ViewModelBase
         private string currentFlagName = string.Empty;
         private Flag flag = default;
         private FlagUnionType flagType = FlagUnionType.None;
+        private string initValue = string.Empty;
+        private string maxValue = string.Empty;
+        private string minValue = string.Empty;
         private bool canConfirm = true; // Start true so that fields can populate on first load
         private bool canConfirmInit = false;
         private bool canConfirmMax = false;
@@ -88,17 +91,22 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string InitValue
     {
-        get => flag.InitValue.ToString();
+        get => initValue = flag.InitValue.ToString();
         set
         {
+            this.RaiseAndSetIfChanged(ref initValue, value);
             try {
-                FlagUnion initValue = FlagUnion.FromString(InitValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.initValue, initValue);
+                FlagUnion initVal = FlagUnion.FromString(InitValueType, value);
+                flag.InitValue = initVal;
                 CanConfirmInit = true;
             }
             catch (FormatException)
             {
                 CanConfirmInit = false;
+            }
+            catch (ArgumentException)
+            {
+                CanConfirmMax = false;
             }
         }
     }
@@ -113,15 +121,20 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string MaxValue
     {
-        get => flag.MaxValue.ToString();
+        get => maxValue = flag.MaxValue.ToString();
         set
         {
+            this.RaiseAndSetIfChanged(ref maxValue, value);
             try {
-                FlagUnion initValue = FlagUnion.FromString(BoundingValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.maxValue, initValue);
+                FlagUnion maxVal = FlagUnion.FromString(BoundingValueType, value);
+                flag.MaxValue = maxVal;
                 CanConfirmMax = true;
             }
             catch (FormatException)
+            {
+                CanConfirmMax = false;
+            }
+            catch (ArgumentException)
             {
                 CanConfirmMax = false;
             }
@@ -129,17 +142,22 @@ public class MainWindowViewModel : ViewModelBase
     }
     public string MinValue
     {
-        get => flag.MinValue.ToString();
+        get => minValue = flag.MinValue.ToString();
         set
         {
+            this.RaiseAndSetIfChanged(ref minValue, value);
             try {
-                FlagUnion initValue = FlagUnion.FromString(BoundingValueType, value);
-                this.RaiseAndSetIfChanged(ref flag.minValue, initValue);
+                FlagUnion minVal = FlagUnion.FromString(BoundingValueType, value);
+                flag.MinValue = minVal;
                 CanConfirmMin = true;
             }
             catch (FormatException)
             {
                 CanConfirmMin = false;
+            }
+            catch (ArgumentException)
+            {
+                CanConfirmMax = false;
             }
         }
     }
