@@ -20,16 +20,16 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" x:Name="Open"/>
                 <Separator/>
-                <MenuItem Header="_Export flags to mod root folder" x:Name="Export"/>
-                <MenuItem Header="_Import flags from mod root folder" x:Name="Import"/>
+                <MenuItem Header="_Export flags to mod root folder" Name="Export"/>
+                <MenuItem Header="_Import flags from mod root folder" Name="Import"/>
                 <Separator/>
-                <MenuItem Header="_Save" x:Name="Save"/>
+                <MenuItem Header="_Save" Name="Save"/>
                 <Separator/>
-                <MenuItem Header="Se_ttings" x:Name="Settings"/>
+                <MenuItem Header="Se_ttings" Name="Settings"/>
                 <Separator/>
-                <MenuItem Header="E_xit" x:Name="Exit"/>
+                <MenuItem Header="E_xit" Name="Exit"/>
             </MenuItem>
-            <MenuItem Header="_About" x:Name="About"/>
+            <MenuItem Header="_About" Name="About"/>
         </Menu>
         <Grid Grid.Row="1" ColumnDefinitions="*,4,*">
             <ListBox Grid.Column="0"
@@ -56,25 +56,31 @@
                 <TextBox Text="{Binding MinValue}"
                     TextWrapping="NoWrap"/>
                 <Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*">
-                    <CheckBox Grid.Column="0"
-                        Grid.Row="0"
-                        IsChecked="{Binding Flag.IsEventAssociated}"/>
-                    <CheckBox Grid.Column="1"
-                        Grid.Row="0"
-                        IsChecked="{Binding Flag.IsOneTrigger}"/>
-                    <CheckBox Grid.Column="0"
-                        Grid.Row="1"
-                        IsChecked="{Binding Flag.IsProgramReadable}"/>
-                    <CheckBox Grid.Column="1"
-                        Grid.Row="1"
-                        IsChecked="{Binding Flag.IsProgramWritable}"/>
-                    <CheckBox Grid.Column="0"
-                        Grid.Row="2"
-                        IsChecked="{Binding Flag.IsSave}"/>
-                    <ComboBox Grid.Column="1"
-                        Grid.Row="2"
-                        ItemsSource="{Binding ResetTypes}"
+                    <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
+                      <TextBlock>IsEventAssociated: </TextBlock>
+                      <CheckBox IsChecked="{Binding Flag.IsEventAssociated}"/>
+                    </StackPanel>
+                  <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock>IsOneTrigger: </TextBlock>
+                    <CheckBox IsChecked="{Binding Flag.IsOneTrigger}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal">
+                    <TextBlock>IsProgramReadable: </TextBlock>
+                    <CheckBox IsChecked="{Binding Flag.IsProgramReadable}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal">
+                    <TextBlock>IsProgramWritable: </TextBlock>
+                    <CheckBox IsChecked="{Binding Flag.IsProgramWritable}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock>IsSave: </TextBlock>
+                    <CheckBox IsChecked="{Binding Flag.IsSave}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock>ResetType: </TextBlock>
+                    <ComboBox ItemsSource="{Binding ResetTypes}"
                         SelectedIndex="{Binding Flag.ResetType}"/>
+                  </StackPanel>
                 </Grid>
             </StackPanel>
         </Grid>

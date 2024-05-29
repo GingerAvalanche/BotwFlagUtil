@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Markup.Xaml;
 using BotwFlagUtil.ViewModels;
 
 namespace BotwFlagUtil.Views;
@@ -9,7 +8,7 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
-        AvaloniaXamlLoader.Load(this);
+        InitializeComponent(true);
 
         DataContext = new MainWindowViewModel();
 
