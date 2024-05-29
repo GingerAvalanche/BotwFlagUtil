@@ -31,7 +31,7 @@
             </MenuItem>
             <MenuItem Header="_About" Name="About"/>
         </Menu>
-        <Grid Grid.Row="1" ColumnDefinitions="*,4,*">
+        <Grid Grid.Row="1" ColumnDefinitions="200,4,*">
             <ListBox Grid.Column="0"
                 ItemsSource="{Binding FlagNames}"
                 Selection="{Binding FlagNameSelection}"
@@ -39,47 +39,128 @@
             
             <GridSplitter Grid.Column="1" Background="DarkGray" ResizeDirection="Columns"/>
 
-            <StackPanel Grid.Column="2">
-                <TextBox Text="{Binding Flag.DataName, Mode=OneWay}"
-                    IsEnabled="False"/>
-                <TextBox Text="{Binding Flag.HashValue, Mode=OneWay}"
-                    IsEnabled="False"/>
-                <ComboBox ItemsSource="{Binding FlagTypes}"
-                    SelectedItem="{Binding FlagType}"
-                    IsEnabled="False"/>
-                <TextBox Text="{Binding Flag.Category}"
-                    IsEnabled="{Binding UseCategory}"/>
-                <TextBox Text="{Binding InitValue}"
-                    TextWrapping="Wrap"/>
-                <TextBox Text="{Binding MaxValue}"
-                    TextWrapping="NoWrap"/>
-                <TextBox Text="{Binding MinValue}"
-                    TextWrapping="NoWrap"/>
-                <Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*">
-                    <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
-                      <TextBlock>IsEventAssociated: </TextBlock>
-                      <CheckBox IsChecked="{Binding Flag.IsEventAssociated}"/>
-                    </StackPanel>
-                  <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
-                    <TextBlock>IsOneTrigger: </TextBlock>
-                    <CheckBox IsChecked="{Binding Flag.IsOneTrigger}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal">
-                    <TextBlock>IsProgramReadable: </TextBlock>
-                    <CheckBox IsChecked="{Binding Flag.IsProgramReadable}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal">
-                    <TextBlock>IsProgramWritable: </TextBlock>
-                    <CheckBox IsChecked="{Binding Flag.IsProgramWritable}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock>IsSave: </TextBlock>
-                    <CheckBox IsChecked="{Binding Flag.IsSave}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock>ResetType: </TextBlock>
+            <StackPanel Grid.Column="2" Margin="10">
+                <Grid RowDefinitions="32,32,32,32,*,32,32" ColumnDefinitions="80,*">
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="0"
+                             VerticalAlignment="Center">
+                    DataName:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="0"
+                           Text="{Binding Flag.DataName, Mode=OneWay}"
+                           IsEnabled="False"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="1"
+                             VerticalAlignment="Center">
+                    HashValue:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="1"
+                           Text="{Binding Flag.HashValue, Mode=OneWay}"
+                           IsEnabled="False"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="2"
+                             VerticalAlignment="Center">
+                    Flag Type:
+                  </TextBlock>
+                  <ComboBox Grid.Column="1"
+                            Grid.Row="2"
+                            ItemsSource="{Binding FlagTypes}"
+                            SelectedItem="{Binding FlagType}"
+                            IsEnabled="False"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="3"
+                             VerticalAlignment="Center">
+                    Category:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="3"
+                           Text="{Binding Flag.Category}"
+                           IsEnabled="{Binding UseCategory}"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="4"
+                             VerticalAlignment="Center">
+                    InitValue:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="4"
+                           Text="{Binding InitValue}"
+                           TextWrapping="Wrap"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="5"
+                             VerticalAlignment="Center">
+                    MaxValue:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="5"
+                           Text="{Binding MaxValue}"
+                           TextWrapping="NoWrap"/>
+                  <TextBlock Grid.Column="0"
+                             Grid.Row="6"
+                             VerticalAlignment="Center">
+                    MinValue:
+                  </TextBlock>
+                  <TextBox Grid.Column="1"
+                           Grid.Row="6"
+                           Text="{Binding MinValue}"
+                           TextWrapping="NoWrap"/>
+                </Grid>
+                <Grid ColumnDefinitions="*,10,*" RowDefinitions="*,*,*">
+                    <Grid Grid.Column="0" Grid.Row="0" ColumnDefinitions="1*,20">
+                      <TextBlock Grid.Column="0"
+                                 VerticalAlignment="Center">
+                        IsEventAssociated:
+                      </TextBlock>
+                      <CheckBox Grid.Column="1"
+                                IsChecked="{Binding Flag.IsEventAssociated}"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+                  <Grid Grid.Column="2" Grid.Row="0" ColumnDefinitions="1*,20">
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center">
+                      IsOneTrigger:
+                    </TextBlock>
+                    <CheckBox Grid.Column="1"
+                              IsChecked="{Binding Flag.IsOneTrigger}"
+                              VerticalAlignment="Center"/>
+                  </Grid>
+                  <Grid Grid.Column="0" Grid.Row="1" ColumnDefinitions="1*,20">
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center">
+                      IsProgramReadable:
+                    </TextBlock>
+                    <CheckBox Grid.Column="1"
+                              IsChecked="{Binding Flag.IsProgramReadable}"
+                              VerticalAlignment="Center"/>
+                  </Grid>
+                  <Grid Grid.Column="2" Grid.Row="1" ColumnDefinitions="1*,20">
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center">
+                      IsProgramWritable:
+                    </TextBlock>
+                    <CheckBox Grid.Column="1"
+                              IsChecked="{Binding Flag.IsProgramWritable}"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Center"/>
+                  </Grid>
+                  <Grid Grid.Column="0" Grid.Row="2" ColumnDefinitions="1*,20">
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center">
+                      IsSave:
+                    </TextBlock>
+                    <CheckBox Grid.Column="1"
+                              IsChecked="{Binding Flag.IsSave}"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Center"/>
+                  </Grid>
+                  <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">
+                      ResetType:
+                    </TextBlock>
                     <ComboBox ItemsSource="{Binding ResetTypes}"
-                        SelectedIndex="{Binding Flag.ResetType}"/>
+                              SelectedIndex="{Binding Flag.ResetType}"
+                              VerticalAlignment="Center"/>
                   </StackPanel>
                 </Grid>
             </StackPanel>

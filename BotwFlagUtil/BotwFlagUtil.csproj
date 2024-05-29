@@ -13,6 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Assets\checkmark.png" />
+    <None Remove="Assets\red_x.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AampLibrary" Version="1.0.10" />
     <PackageReference Include="Avalonia" Version="11.0.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
