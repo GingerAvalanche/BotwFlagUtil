@@ -334,7 +334,7 @@ namespace BotwFlagUtil.GameData.Util
                 FlagUnionType.Vec3 => new Vec3(data),
                 FlagUnionType.Vec3Array => data[1..^1].Split(',').Select(x => new Vec3(x.Trim())).ToList(),
                 FlagUnionType.Vec4 => new Vec4(data),
-                _ => "",
+                _ => throw new ArgumentException($"{type} not valid Flag type"),
             };
         }
 
