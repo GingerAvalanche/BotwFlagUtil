@@ -7,7 +7,7 @@
         x:Class="BotwFlagUtil.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="BotwFlagUtil">
+        Title="{Binding Title}">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -15,6 +15,68 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid RowDefinitions="30,*">
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" x:Name="Open"/>
+                <Separator/>
+                <MenuItem Header="_Export flags to mod root folder" x:Name="Export"/>
+                <MenuItem Header="_Import flags from mod root folder" x:Name="Import"/>
+                <Separator/>
+                <MenuItem Header="_Save" x:Name="Save"/>
+                <Separator/>
+                <MenuItem Header="Se_ttings" x:Name="Settings"/>
+                <Separator/>
+                <MenuItem Header="E_xit" x:Name="Exit"/>
+            </MenuItem>
+            <MenuItem Header="_About" x:Name="About"/>
+        </Menu>
+        <Grid Grid.Row="1" ColumnDefinitions="*,4,*">
+            <ListBox Grid.Column="0"
+                ItemsSource="{Binding FlagNames}"
+                Selection="{Binding FlagNameSelection}"
+                SelectionMode="Single,AlwaysSelected"/>
+            
+            <GridSplitter Grid.Column="1" Background="DarkGray" ResizeDirection="Columns"/>
 
+            <StackPanel Grid.Column="2">
+                <TextBox Text="{Binding Flag.DataName, Mode=OneWay}"
+                    IsEnabled="False"/>
+                <TextBox Text="{Binding Flag.HashValue, Mode=OneWay}"
+                    IsEnabled="False"/>
+                <ComboBox ItemsSource="{Binding FlagTypes}"
+                    SelectedItem="{Binding FlagType}"
+                    IsEnabled="False"/>
+                <TextBox Text="{Binding Flag.Category}"
+                    IsEnabled="{Binding UseCategory}"/>
+                <TextBox Text="{Binding InitValue}"
+                    TextWrapping="Wrap"/>
+                <TextBox Text="{Binding MaxValue}"
+                    TextWrapping="NoWrap"/>
+                <TextBox Text="{Binding MinValue}"
+                    TextWrapping="NoWrap"/>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*">
+                    <CheckBox Grid.Column="0"
+                        Grid.Row="0"
+                        IsChecked="{Binding Flag.IsEventAssociated}"/>
+                    <CheckBox Grid.Column="1"
+                        Grid.Row="0"
+                        IsChecked="{Binding Flag.IsOneTrigger}"/>
+                    <CheckBox Grid.Column="0"
+                        Grid.Row="1"
+                        IsChecked="{Binding Flag.IsProgramReadable}"/>
+                    <CheckBox Grid.Column="1"
+                        Grid.Row="1"
+                        IsChecked="{Binding Flag.IsProgramWritable}"/>
+                    <CheckBox Grid.Column="0"
+                        Grid.Row="2"
+                        IsChecked="{Binding Flag.IsSave}"/>
+                    <ComboBox Grid.Column="1"
+                        Grid.Row="2"
+                        ItemsSource="{Binding ResetTypes}"
+                        SelectedIndex="{Binding Flag.ResetType}"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Window>
