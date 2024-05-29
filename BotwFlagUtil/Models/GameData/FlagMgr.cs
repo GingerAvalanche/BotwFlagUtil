@@ -29,23 +29,24 @@ namespace BotwFlagUtil.GameData
 
         public FlagMgr()
         {
+            HashValueComparer comparer = new();
             _flags = new() {
-                { "bool_data", [] },
-                { "bool_array_data", [] },
-                { "f32_data", [] },
-                { "f32_array_data", [] },
-                { "s32_data", [] },
-                { "s32_array_data", [] },
-                { "string_data", [] },
-                { "string64_data", [] },
-                { "string256_data", [] },
-                { "string64_array_data", [] },
-                { "string256_array_data", [] },
-                { "vector2f_data", [] },
-                { "vector2f_array_data", [] },
-                { "vector3f_data", [] },
-                { "vector3f_array_data", [] },
-                { "vector4f_data", [] },
+                { "bool_data", new(comparer) },
+                { "bool_array_data", new(comparer) },
+                { "f32_data", new(comparer) },
+                { "f32_array_data", new(comparer) },
+                { "s32_data", new(comparer) },
+                { "s32_array_data", new(comparer) },
+                { "string_data", new(comparer) },
+                { "string64_data", new(comparer) },
+                { "string256_data", new(comparer) },
+                { "string64_array_data", new(comparer) },
+                { "string256_array_data", new(comparer) },
+                { "vector2f_data", new(comparer) },
+                { "vector2f_array_data", new(comparer) },
+                { "vector3f_data", new(comparer) },
+                { "vector3f_array_data", new(comparer) },
+                { "vector4f_data", new(comparer) },
             };
             _hashes = [];
         }
@@ -321,5 +322,11 @@ namespace BotwFlagUtil.GameData
                 File.WriteAllBytes(path, ms.ToArray());
             }
         }
+    }
+
+    class HashValueComparer : IEqualityComparer<Flag>
+    {
+        public bool Equals(Flag a, Flag b) => a.HashValue == b.HashValue;
+        public int GetHashCode(Flag f) => f.HashValue.ivalue;
     }
 }
