@@ -11,20 +11,20 @@ namespace BotwFlagUtil.GameData
 {
     public struct Flag : IEquatable<Flag>
     {
-        private string dataName;
-        private NintendoHash hashValue;
-        private int? category;
-        private readonly int deleteRev;
-        public FlagUnion initValue;
-        private bool isEventAssociated;
-        private bool isOneTrigger;
-        private bool isProgramReadable;
-        private bool isProgramWritable;
-        private bool isSave;
-        public FlagUnion maxValue;
-        public FlagUnion minValue;
-        private int resetType;
-        private bool? isRevival;
+        private string dataName = string.Empty;
+        private NintendoHash hashValue = 0;
+        private int? category = null;
+        private readonly int deleteRev = -1;
+        public FlagUnion initValue = default;
+        private bool isEventAssociated = false;
+        private bool isOneTrigger = false;
+        private bool isProgramReadable = false;
+        private bool isProgramWritable = false;
+        private bool isSave = false;
+        public FlagUnion maxValue = default;
+        public FlagUnion minValue = default;
+        private int resetType = 0;
+        private bool? isRevival = null;
 
         [JsonConstructor]
         public Flag(
@@ -217,7 +217,7 @@ namespace BotwFlagUtil.GameData
         public bool IsSave { readonly get => isSave; set => isSave = value; }
         public FlagUnion MaxValue { readonly get => maxValue; set => maxValue = value; }
         public FlagUnion MinValue { readonly get => minValue; set => minValue = value; }
-        public int ResetType { get; }
+        public int ResetType { readonly get => resetType; set => resetType = value; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? IsRevival { readonly get => isRevival; set => isRevival = value; }
 
