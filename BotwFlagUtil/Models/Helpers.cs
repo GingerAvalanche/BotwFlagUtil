@@ -416,14 +416,7 @@ namespace BotwFlagUtil
         }
         public static Dictionary<string, Vec3> ModShrineLocs
         {
-            get
-            {
-                if (modShrineLocs == null)
-                {
-                    modShrineLocs = AllShrineLocs.Except(VanillaShrineLocs).ToDictionary();
-                }
-                return modShrineLocs;
-            }
+            get => modShrineLocs ??= AllShrineLocs.Except(VanillaShrineLocs).ToDictionary();
         }
         public static Dictionary<string, Vec3> AllShrineLocs
         {
