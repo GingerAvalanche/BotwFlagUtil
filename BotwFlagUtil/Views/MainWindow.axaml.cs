@@ -1,12 +1,15 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform;
 using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -19,12 +22,15 @@ public partial class MainWindow : Window
     {
         InitializeComponent(true);
 
-        DataContext = new MainWindowViewModel();
+        MainWindowViewModel vm = new();
+        DataContext = vm;
 
         using (var streamReader = AssetLoader.Open(new("avares://BotwFlagUtil/Assets/icon.png")))
         {
             icon = new(streamReader);
         }
+
+        FlagSelector.DataTemplates.Add(new FlagNameDataTemplate(vm));
 
         About.Click += About_Click;
         Exit.Click += Exit_Click;
@@ -127,5 +133,46 @@ public partial class MainWindow : Window
                 WindowIcon = icon,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
             }).ShowWindowDialogAsync(this);
+    }
+
+    private class FlagNameDataTemplate(MainWindowViewModel vm) : IDataTemplate
+    {
+        private readonly Dictionary<string, GeneratorConfidence> confidences = vm.confidences;
+        private readonly Dictionary<string, bool> confirmeds = vm.confirmeds;
+
+        public Control Build(object? param)
+        {
+            string flagName = (string)param!;
+            var control = new TextBlock()
+            {
+                Background = GetBackgroundColor(flagName),
+                Foreground = GetForegroundColor(flagName),
+                FontWeight = FontWeight.Bold,
+                Text = flagName
+            };
+            return control;
+        }
+
+        public bool Match(object? data)
+        {
+            return data is string flagName && confidences.ContainsKey(flagName);
+        }
+
+        public IImmutableSolidColorBrush GetBackgroundColor(string flagName)
+        {
+            return confirmeds[flagName] ? Brushes.PaleGreen : Brushes.Transparent;
+        }
+
+        public IImmutableSolidColorBrush GetForegroundColor(string flagName)
+        {
+            return confidences[flagName] switch
+            {
+                GeneratorConfidence.Bad => Brushes.Red,
+                GeneratorConfidence.Mediocre => Brushes.Yellow,
+                GeneratorConfidence.Good => Brushes.Green,
+                GeneratorConfidence.Definite => Brushes.Blue,
+                _ => Brushes.Violet,
+            };
+        }
     }
 }
