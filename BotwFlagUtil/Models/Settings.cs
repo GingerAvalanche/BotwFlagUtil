@@ -75,38 +75,31 @@ namespace BotwFlagUtil
         {
             if (value == null || (value.gameDir == string.Empty && value.gameDirNx == string.Empty))
             {
-                Console.WriteLine("Must have game dumps for at least one of the consoles.");
                 return false;
             }
             if (value.gameDir != string.Empty)
             {
-                if (!File.Exists(Path.Combine(value.gameDir, "Pack", "Dungeon000.pack")))
+                if (!ValidateGameDir(value.gameDir))
                 {
-                    Console.WriteLine("WiiU game dump failed to validate.");
                     return false;
                 }
-                if (!File.Exists(Path.Combine(value.updateDir, "Actor", "Pack", "FldObj_MountainSnow_A_M_02.sbactorpack")))
+                if (!ValidateUpdateDir(value.updateDir))
                 {
-                    Console.WriteLine(Path.Combine(value.updateDir, "Actor", "Pack", "FldObj_MountainSnow_A_M_02.sbactorpack"));
-                    Console.WriteLine("WiiU update dump failed to validate.");
                     return false;
                 }
-                if (value.dlcDir != string.Empty && !File.Exists(Path.Combine(value.dlcDir, "Pack", "AocMainField.pack")))
+                if (value.dlcDir != string.Empty && !ValidateDlcDir(value.dlcDir))
                 {
-                    Console.WriteLine("WiiU DLC dump failed to validate.");
                     return false;
                 }
             }
             if (value.gameDirNx != string.Empty)
             {
-                if (!File.Exists(Path.Combine(value.gameDirNx, "Pack", "Dungeon000.pack")))
+                if (!ValidateGameDirNx(value.gameDirNx))
                 {
-                    Console.WriteLine("Switch game dump failed to validate.");
                     return false;
                 }
-                if (value.dlcDirNx != string.Empty && !File.Exists(Path.Combine(value.dlcDirNx, "Pack", "AocMainField.pack")))
+                if (value.dlcDirNx != string.Empty && !ValidateDlcDirNx(value.dlcDirNx))
                 {
-                    Console.WriteLine("Switch DLC dump failed to validate.");
                     return false;
                 }
             }
