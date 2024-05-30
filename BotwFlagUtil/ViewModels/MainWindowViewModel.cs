@@ -17,8 +17,8 @@ public class MainWindowViewModel : ViewModelBase
     private bool skipSelectionChangedEvent = false;
 
     // Flag list
-    private Dictionary<string, GeneratorConfidence> confidences = [];
-    private Dictionary<string, bool> confirmeds = [];
+    public readonly Dictionary<string, GeneratorConfidence> confidences = [];
+    public readonly Dictionary<string, bool> confirmeds = [];
     private List<string> flagNames = [];
     private static readonly string[] flagsWithCategory = [
             "Clear_",
