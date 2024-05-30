@@ -265,8 +265,10 @@ public class MainWindowViewModel : ViewModelBase
 
         IEnumerable<Flag> flags = generator.mgr.GetAllFlags();
         List<string> flagNamesTemp = new(flags.Count());
-        confidences = new(flagNamesTemp.Capacity);
-        confirmeds = new(flagNamesTemp.Capacity);
+        confidences.Clear();
+        confidences.EnsureCapacity(flagNamesTemp.Capacity);
+        confirmeds.Clear();
+        confirmeds.EnsureCapacity(flagNamesTemp.Capacity);
         foreach (Flag flag in flags)
         {
             flagNamesTemp.Add(flag.DataName);
@@ -306,8 +308,10 @@ public class MainWindowViewModel : ViewModelBase
                     generator.ReplaceManager(flagMgr);
                     IEnumerable<Flag> flags = flagMgr.GetAllFlags();
                     List<string> flagNamesTemp = new(flags.Count());
-                    confidences = new(flagNamesTemp.Capacity);
-                    confirmeds = new(flagNamesTemp.Capacity);
+                    confidences.Clear();
+                    confidences.EnsureCapacity(flagNamesTemp.Capacity);
+                    confirmeds.Clear();
+                    confirmeds.EnsureCapacity(flagNamesTemp.Capacity);
                     foreach (Flag flag in flags)
                     {
                         flagNamesTemp.Add(flag.DataName);
