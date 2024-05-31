@@ -516,7 +516,7 @@ namespace BotwFlagUtil
             if (ModEndianness == Endianness.Big)
             {
                 path = Path.Combine(RootDir, "aoc", "0010", relativePath);
-                if (File.Exists(path))
+                if (File.Exists(path) || Directory.Exists(path))
                 {
                     return path;
                 }
@@ -528,7 +528,7 @@ namespace BotwFlagUtil
             else
             {
                 path = Path.Combine(RootDir, "01007EF00011F001", "romfs", relativePath);
-                if (File.Exists(path))
+                if (File.Exists(path) || Directory.Exists(path))
                 {
                     return path;
                 }
@@ -545,11 +545,13 @@ namespace BotwFlagUtil
             string rootDir;
             if (ModEndianness == Endianness.Big)
             {
-                if (File.Exists(Path.Combine(settings.dlcDir, relativePath)))
+                if (File.Exists(Path.Combine(settings.dlcDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.dlcDir, relativePath)))
                 {
                     rootDir = settings.dlcDir;
                 }
-                else if (File.Exists(Path.Combine(settings.updateDir, relativePath)))
+                else if (File.Exists(Path.Combine(settings.updateDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.updateDir, relativePath)))
                 {
                     rootDir = settings.updateDir;
                 }
@@ -560,7 +562,8 @@ namespace BotwFlagUtil
             }
             else
             {
-                if (File.Exists(Path.Combine(settings.dlcDirNx, relativePath)))
+                if (File.Exists(Path.Combine(settings.dlcDirNx, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.dlcDirNx, relativePath)))
                 {
                     rootDir = settings.dlcDirNx;
                 }
