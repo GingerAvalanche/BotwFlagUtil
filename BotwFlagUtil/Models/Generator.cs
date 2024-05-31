@@ -459,8 +459,11 @@ namespace BotwFlagUtil
                     )
                 )
                 {
-                    mgr.Add(value);
-                    flagConfidence[value.HashValue] = confidence;
+                    if (!flagConfidence.ContainsKey(value.HashValue))
+                    {
+                        mgr.Add(value);
+                        flagConfidence[value.HashValue] = confidence;
+                    }
                 }
                 else
                 {
