@@ -905,7 +905,7 @@ namespace BotwFlagUtil
                 bool hasStock =
                     Helpers.GetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
                 // CAREFUL: Will ImmutableSarc..ctor() like a default RevrsReader?
-                ImmutableSarc stockPack = new(ref reader);
+                ImmutableSarc stockPack = new(ref stockReader);
 
                 foreach (string suffix in (string[])["_Static", "_Dynamic"])
                 {
