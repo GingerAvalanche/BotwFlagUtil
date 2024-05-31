@@ -512,31 +512,23 @@ namespace BotwFlagUtil
             {
                 throw new InvalidOperationException("Attempted to read path without root directory");
             }
-            string path;
-            if (ModEndianness == Endianness.Big)
+            string[] paths = ModEndianness == Endianness.Big ? 
+            [
+                Path.Combine(RootDir, "aoc", "0010", relativePath),
+                Path.Combine(RootDir, "content", relativePath)
+            ] : [
+                Path.Combine(RootDir, "01007EF00011F001", "romfs", relativePath),
+                Path.Combine(RootDir, "01007EF00011E800", "romfs", relativePath)
+            ];
+
+            foreach (string path in paths)
             {
-                path = Path.Combine(RootDir, "aoc", "0010", relativePath);
                 if (File.Exists(path) || Directory.Exists(path))
                 {
                     return path;
                 }
-                else
-                {
-                    return Path.Combine(RootDir, "content", relativePath);
-                }
             }
-            else
-            {
-                path = Path.Combine(RootDir, "01007EF00011F001", "romfs", relativePath);
-                if (File.Exists(path) || Directory.Exists(path))
-                {
-                    return path;
-                }
-                else
-                {
-                    return Path.Combine(RootDir, "01007EF00011E800", "romfs", relativePath);
-                }
-            }
+            return string.Empty;
         }
 
         public static string GetFullStockPath(string relativePath)
