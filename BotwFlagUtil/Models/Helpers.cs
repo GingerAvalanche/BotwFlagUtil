@@ -461,7 +461,9 @@ namespace BotwFlagUtil
                 if (vanillaLocSaveFlags == null)
                 {
                     RevrsReader reader = new(
-                        File.ReadAllBytes(GetFullStockPath("Map/MainField/Static.smubin")),
+                        Yaz0.Decompress(
+                            File.ReadAllBytes(GetFullStockPath("Map/MainField/Static.smubin"))
+                        ),
                         ModEndianness
                     );
                     ImmutableByml stockStatic = new(ref reader);
