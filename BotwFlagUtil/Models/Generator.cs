@@ -31,6 +31,28 @@ namespace BotwFlagUtil
             "Open_{0}",
             "{0}_{1}_{2}"
         ];
+        private static readonly HashSet<string> noZukanFlagActors =
+        [
+            "DgnObj_DLC_Weapon_Sword_502",
+            "Priest_Boss_Giant",
+            "Priest_Boss_ShadowClone_Real",
+        ];
+        private static readonly HashSet<string> noShopFlagActors =
+        [
+            "Npc_DressFairy_00",
+            "Npc_DressFairy_01",
+            "Npc_DressFairy_02",
+            "Npc_DressFairy_03",
+        ];
+        private static readonly Dictionary<NintendoHash, FlagCategory> zukanCategoryMap = new()
+        {
+            { 0x24CD75FE, FlagCategory.Animal },
+            { 0x36565B66, FlagCategory.Boss },
+            { 0x994AEF4B, FlagCategory.Enemy },
+            { 0xBB8D80C2, FlagCategory.Other },
+            { 0x682E5129, FlagCategory.Sozai },
+            { 0x2755F107, FlagCategory.Weapon },
+        };
 
         public Generator()
         {
@@ -46,311 +68,175 @@ namespace BotwFlagUtil
             {
                 throw new InvalidOperationException("Evaluating maps before setting root directory!");
             }
-            string actorPath = Helpers.GetFullModPath("Actor/Pack");
-            if (!Directory.Exists(actorPath))
+            string actorInfoPath = Helpers.GetFullModPath("Actor/ActorInfo.product.sbyml");
+            if (actorInfoPath == string.Empty)
             {
                 return;
             }
-            foreach (string path in Directory.EnumerateFiles(
-                actorPath, "*.sbactorpack"
-            ))
-            {
-                string actorName = Path.GetFileNameWithoutExtension(path);
-                Flag flag;
-                if (actorName.StartsWith("Animal_", StringComparison.Ordinal))
+
+            Flag flag;
+            HashSet<string> npcsToCheck = [];
+            RevrsReader reader =
+                new(Yaz0.Decompress(File.ReadAllBytes(actorInfoPath)), Helpers.ModEndianness);
+            ImmutableByml actorInfo = new(ref reader);
+            ImmutableBymlStringTable keyTable = actorInfo.KeyTable;
+            ImmutableBymlStringTable stringTable = actorInfo.StringTable;
+            actorInfo.GetMap().TryGetValue(keyTable, "Actors", out ImmutableByml actorList);
+            foreach (ImmutableByml actor in actorList.GetArray())
+            {   
+                ImmutableBymlMap map = actor.GetMap();
+                map.TryGetValue(keyTable, "name", out ImmutableByml nameNode);
+                string actorName = nameNode.GetString(stringTable);
+
+                if (map.TryGetValue(keyTable, "profile", out ImmutableByml profile) &&
+                    profile.GetString(stringTable) == "NPC")
                 {
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                    npcsToCheck.Add(actorName);
+                }
 
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    RevrsReader reader =
-                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
-                    ImmutableSarc pack = new(ref reader);
-                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
-                    ParamObject? tags = bxml.RootNode.Objects("Tags");
-                    if (tags != null)
+                if (!map.TryGetValue(keyTable, "tags", out ImmutableByml tags))
+                {
+                    ImmutableBymlMap tagsMap = tags.GetMap();
+                    foreach (ImmutableBymlMapEntry entry in tagsMap)
                     {
-                        foreach (ParamEntry entry in tags.ParamEntries)
+                        NintendoHash entryValue = entry.Node;
+                        if (zukanCategoryMap.TryGetValue(entryValue, out FlagCategory category) &&
+                            !noZukanFlagActors.Contains(actorName))
                         {
-                            if (entry.Value.ToString() == "CanGetPouch")
+                            flag = new(
+                                $"IsNewPictureBook_{actorName}",
+                                FlagUnionType.Bool,
+                                isSave: true
+                            ) {
+                                MaxValue = true
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                            flag = new(
+                                $"IsRegisteredPictureBook_{actorName}",
+                                FlagUnionType.Bool,
+                                isSave: true
+                            ) {
+                                Category = (int)category,
+                                MaxValue = true
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                            flag = new(
+                                $"PictureBookSize_{actorName}",
+                                FlagUnionType.S32,
+                                isSave: true
+                            ) {
+                                InitValue = -1,
+                                MaxValue = 65536,
+                                MinValue = -1
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                        }
+
+                        if (entryValue.uvalue == 0xE0194F30) // CanGetPouch
+                        {
+                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml _))
                             {
-                                flag = new(
-                                    $"IsGet_{actorName}",
-                                    FlagUnionType.Bool,
-                                    isOneTrigger: true,
-                                    isSave: true
-                                ) {
-                                    MaxValue = true
-                                };
-                                flagsToAdd.Add(flag);
-                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                                break;
+                                // Skip actors that can be got but give a different actor
+                                continue;
                             }
+
+                            flag = new(
+                                $"IsGet_{actorName}",
+                                FlagUnionType.Bool,
+                                isOneTrigger: true,
+                                isSave: true
+                            ) {
+                                MaxValue = true
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                        }
+
+                        if (entryValue.uvalue == 0x289F28B5) // CanEquip
+                        {
+                            flag = new(
+                                $"EquipTime_{actorName}",
+                                FlagUnionType.S32,
+                                isSave: true
+                            ) {
+                                MaxValue = 2147483647
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                            flag = new(
+                                $"PorchTime_{actorName}",
+                                FlagUnionType.S32,
+                                isSave: true
+                            ) {
+                                MaxValue = 2147483647
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                         }
                     }
                 }
-                else if (actorName.StartsWith("Armor_", StringComparison.Ordinal))
+            }
+
+            foreach (string actorName in npcsToCheck)
+            {
+                string path = Helpers.GetFullModPath($"Actor/Pack/{actorName}.sbactorpack");
+                if (path == string.Empty)
                 {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"EquipTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PorchTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                    continue; // Ignore NPCs that aren't modified by this mod
                 }
-                else if (actorName.StartsWith("Enemy_", StringComparison.Ordinal))
+
+                RevrsReader npcReader =
+                    new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
+                ImmutableSarc pack = new(ref npcReader);
+                AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
+                string shopLink = bxml.RootNode
+                    .Objects("LinkTarget")!
+                    .Params("ShopDataUser")!
+                    .Value.ToString()!;
+                if (shopLink == "Dummy")
                 {
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 3,
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                    continue;
                 }
-                else if (actorName.StartsWith("Item_", StringComparison.Ordinal))
+
+                flag = new(
+                    $"{actorName}_SoldOut",
+                    FlagUnionType.Bool,
+                    isSave: true
+                ) {
+                    MaxValue = true
+                };
+                flagsToAdd.Add(flag);
+                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
+                foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
                 {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 4,
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Good;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                }
-                else if (actorName.StartsWith("Npc_", StringComparison.OrdinalIgnoreCase))
-                {
-                    RevrsReader reader =
-                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
-                    ImmutableSarc pack = new(ref reader);
-                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
-                    string shopLink = bxml.RootNode
-                        .Objects("LinkTarget")!
-                        .Params("ShopDataUser")!
-                        .Value.ToString()!;
-                    if (shopLink == "Dummy")
+                    if (entry.HashString == "TableNum")
                     {
                         continue;
                     }
-
-                    flag = new(
-                        $"{actorName}_SoldOut",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
-                    foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
+                    foreach (ParamEntry tableEntry in
+                        bshop.RootNode.Objects(entry.Value.ToString()!)!.ParamEntries)
                     {
-                        if (entry.HashString == "TableNum")
+                        if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
                         {
-                            continue;
-                        }
-                        foreach (ParamEntry tableEntry in
-                            bshop.RootNode.Objects(entry.Value.ToString()!)!.ParamEntries)
-                        {
-                            if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
-                            {
-                                flag = new(
-                                    $"{actorName}_{tableEntry.Value}",
-                                    FlagUnionType.S32,
-                                    isSave: true
-                                ) {
-                                    MaxValue = 65535
-                                };
-                                flagsToAdd.Add(flag);
-                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                            }
+                            flag = new(
+                                $"{actorName}_{tableEntry.Value}",
+                                FlagUnionType.S32,
+                                isSave: true
+                            ) {
+                                MaxValue = 65535
+                            };
+                            flagsToAdd.Add(flag);
+                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                         }
                     }
-                }
-                else if (actorName.StartsWith("Weapon_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 5,
-                        MaxValue = true
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"EquipTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PorchTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    flagsToAdd.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
             }
         }
