@@ -1,4 +1,4 @@
-﻿using BotwFlagUtil.GameData;
+using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
 using BymlLibrary;
 using BymlLibrary.Nodes.Immutable.Containers;
@@ -23,8 +23,8 @@ namespace BotwFlagUtil
         private static Dictionary<string, Vec3>? allShrineLocs;
         private static HashSet<string>? vanillaLocSaveFlags;
         private static Dictionary<string, Vec3>? vanillaShrineLocs; 
-        public static readonly Dictionary<string, string[]> vanillaHasFlags =
-            JsonSerializer.Deserialize<Dictionary<string, string[]>>(
+        public static readonly Dictionary<string, HashSet<string>> vanillaHasFlags =
+            JsonSerializer.Deserialize<Dictionary<string, HashSet<string>>>(
                 File.ReadAllText(
                     Path.Combine(AppContext.BaseDirectory, "data", "vanilla_actors.json")
                 )
