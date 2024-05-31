@@ -20,12 +20,6 @@ public class MainWindowViewModel : ViewModelBase
     public readonly Dictionary<string, GeneratorConfidence> confidences = [];
     public readonly Dictionary<string, bool> confirmeds = [];
     private List<string> flagNames = [];
-    private static readonly string[] flagsWithCategory = [
-            "Clear_",
-            "Dungeon_Clear_",
-            "IsRegisteredPictureBook_",
-            "MainField_Npc_HiddenKorok"
-        ];
     private FlagStringType stringType = FlagStringType.None;
     
     public string Title
@@ -58,8 +52,7 @@ public class MainWindowViewModel : ViewModelBase
     }
     public bool UseCategory
     {
-        get => flagsWithCategory
-            .Any(s => flag.DataName?.StartsWith(s, StringComparison.Ordinal) ?? false);
+        get => flag.Category != null;
     }
     public string FlagType
     {
@@ -226,6 +219,7 @@ public class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(InitValue));
             this.RaisePropertyChanged(nameof(MaxValue));
             this.RaisePropertyChanged(nameof(MinValue));
+            this.RaisePropertyChanged(nameof(UseCategory));
         }
     }
 
