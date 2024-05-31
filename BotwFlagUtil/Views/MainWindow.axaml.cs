@@ -4,6 +4,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
+using BotwFlagUtil.Enums;
 using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
