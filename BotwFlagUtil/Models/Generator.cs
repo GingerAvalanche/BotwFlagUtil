@@ -53,6 +53,321 @@ namespace BotwFlagUtil
             orphanedFlagHashes = [];
         }
 
+        public void GenerateActorFlags()
+        {
+            if (Helpers.RootDir == null)
+            {
+                throw new InvalidOperationException("Evaluating maps before setting root directory!");
+            }
+            string actorPath = Helpers.GetFullModPath("Actor/Pack");
+            if (!Directory.Exists(actorPath))
+            {
+                return;
+            }
+            foreach (string path in Directory.EnumerateFiles(
+                actorPath, "*.sbactorpack"
+            ))
+            {
+                string actorName = Path.GetFileNameWithoutExtension(path);
+                Flag flag;
+                if (actorName.StartsWith("Animal_", StringComparison.Ordinal))
+                {
+                    flag = new(
+                        $"IsNewPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsRegisteredPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        Category = 2,
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"PictureBookSize_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        Category = 2,
+                        InitValue = -1,
+                        MaxValue = 65536,
+                        MinValue = -1
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    RevrsReader reader =
+                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
+                    ImmutableSarc pack = new(ref reader);
+                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
+                    ParamObject? tags = bxml.RootNode.Objects("Tags");
+                    if (tags != null)
+                    {
+                        foreach (ParamEntry entry in tags.ParamEntries)
+                        {
+                            if (entry.Value.ToString() == "CanGetPouch")
+                            {
+                                flag = new(
+                                    $"IsGet_{actorName}",
+                                    FlagUnionType.Bool,
+                                    isOneTrigger: true,
+                                    isSave: true
+                                ) {
+                                    MaxValue = true
+                                };
+                                mgr.Add(flag);
+                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (actorName.StartsWith("Armor_", StringComparison.Ordinal))
+                {
+                    flag = new(
+                        $"IsGet_{actorName}",
+                        FlagUnionType.Bool,
+                        isOneTrigger: true,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"EquipTime_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        MaxValue = 2147483647
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"PorchTime_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        MaxValue = 2147483647
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                }
+                else if (actorName.StartsWith("Enemy_", StringComparison.Ordinal))
+                {
+                    flag = new(
+                        $"IsNewPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsRegisteredPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        Category = 3,
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"PictureBookSize_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        Category = 2,
+                        InitValue = -1,
+                        MaxValue = 65536,
+                        MinValue = -1
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                }
+                else if (actorName.StartsWith("Item_", StringComparison.Ordinal))
+                {
+                    flag = new(
+                        $"IsGet_{actorName}",
+                        FlagUnionType.Bool,
+                        isOneTrigger: true,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsNewPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsRegisteredPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        Category = 4,
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Good;
+
+                    flag = new(
+                        $"PictureBookSize_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        Category = 2,
+                        InitValue = -1,
+                        MaxValue = 65536,
+                        MinValue = -1
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                }
+                else if (actorName.StartsWith("Npc_", StringComparison.OrdinalIgnoreCase))
+                {
+                    RevrsReader reader =
+                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
+                    ImmutableSarc pack = new(ref reader);
+                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
+                    string shopLink = bxml.RootNode
+                        .Objects("LinkTarget")!
+                        .Params("ShopDataUser")!
+                        .Value.ToString()!;
+                    if (shopLink == "Dummy")
+                    {
+                        continue;
+                    }
+
+                    flag = new(
+                        $"{actorName}_SoldOut",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
+                    foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
+                    {
+                        if (entry.HashString == "TableNum")
+                        {
+                            continue;
+                        }
+                        foreach (ParamEntry tableEntry in
+                            bshop.RootNode.Objects(entry.Value.ToString()!)!.ParamEntries)
+                        {
+                            if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
+                            {
+                                flag = new(
+                                    $"{actorName}_{tableEntry.Value}",
+                                    FlagUnionType.S32,
+                                    isSave: true
+                                ) {
+                                    MaxValue = 65535
+                                };
+                                mgr.Add(flag);
+                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }
+                        }
+                    }
+                }
+                else if (actorName.StartsWith("Weapon_", StringComparison.Ordinal))
+                {
+                    flag = new(
+                        $"IsGet_{actorName}",
+                        FlagUnionType.Bool,
+                        isOneTrigger: true,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsNewPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"IsRegisteredPictureBook_{actorName}",
+                        FlagUnionType.Bool,
+                        isSave: true
+                    ) {
+                        Category = 5,
+                        MaxValue = true
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"PictureBookSize_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        Category = 2,
+                        InitValue = -1,
+                        MaxValue = 65536,
+                        MinValue = -1
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"EquipTime_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        MaxValue = 2147483647
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+
+                    flag = new(
+                        $"PorchTime_{actorName}",
+                        FlagUnionType.S32,
+                        isSave: true
+                    ) {
+                        MaxValue = 2147483647
+                    };
+                    mgr.Add(flag);
+                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                }
+            }
+        }
+
         public void GenerateEventFlags()
         {
             string? flagName;
@@ -484,321 +799,6 @@ namespace BotwFlagUtil
                         }_{stockHashes[i]}"
                     );
                     orphanedFlagHashes.Add(oldHash);
-                }
-            }
-        }
-
-        public void GenerateItemFlags()
-        {
-            if (Helpers.RootDir == null)
-            {
-                throw new InvalidOperationException("Evaluating maps before setting root directory!");
-            }
-            string actorPath = Helpers.GetFullModPath("Actor/Pack");
-            if (!Directory.Exists(actorPath))
-            {
-                return;
-            }
-            foreach (string path in Directory.EnumerateFiles(
-                actorPath, "*.sbactorpack"
-            ))
-            {
-                string actorName = Path.GetFileNameWithoutExtension(path);
-                Flag flag;
-                if (actorName.StartsWith("Animal_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    RevrsReader reader =
-                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
-                    ImmutableSarc pack = new(ref reader);
-                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
-                    ParamObject? tags = bxml.RootNode.Objects("Tags");
-                    if (tags != null)
-                    {
-                        foreach (ParamEntry entry in tags.ParamEntries)
-                        {
-                            if (entry.Value.ToString() == "CanGetPouch")
-                            {
-                                flag = new(
-                                    $"IsGet_{actorName}",
-                                    FlagUnionType.Bool,
-                                    isOneTrigger: true,
-                                    isSave: true
-                                ) {
-                                    MaxValue = true
-                                };
-                                mgr.Add(flag);
-                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                                break;
-                            }
-                        }
-                    }
-                }
-                else if (actorName.StartsWith("Armor_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"EquipTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PorchTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                }
-                else if (actorName.StartsWith("Enemy_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 3,
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                }
-                else if (actorName.StartsWith("Item_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 4,
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Good;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                }
-                else if (actorName.StartsWith("Npc_", StringComparison.OrdinalIgnoreCase))
-                {
-                    RevrsReader reader =
-                        new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
-                    ImmutableSarc pack = new(ref reader);
-                    AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
-                    string shopLink = bxml.RootNode
-                        .Objects("LinkTarget")!
-                        .Params("ShopDataUser")!
-                        .Value.ToString()!;
-                    if (shopLink == "Dummy")
-                    {
-                        continue;
-                    }
-
-                    flag = new(
-                        $"{actorName}_SoldOut",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
-                    foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
-                    {
-                        if (entry.HashString == "TableNum")
-                        {
-                            continue;
-                        }
-                        foreach (ParamEntry tableEntry in
-                            bshop.RootNode.Objects(entry.Value.ToString()!)!.ParamEntries)
-                        {
-                            if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
-                            {
-                                flag = new(
-                                    $"{actorName}_{tableEntry.Value}",
-                                    FlagUnionType.S32,
-                                    isSave: true
-                                ) {
-                                    MaxValue = 65535
-                                };
-                                mgr.Add(flag);
-                                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-                            }
-                        }
-                    }
-                }
-                else if (actorName.StartsWith("Weapon_", StringComparison.Ordinal))
-                {
-                    flag = new(
-                        $"IsGet_{actorName}",
-                        FlagUnionType.Bool,
-                        isOneTrigger: true,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsNewPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"IsRegisteredPictureBook_{actorName}",
-                        FlagUnionType.Bool,
-                        isSave: true
-                    ) {
-                        Category = 5,
-                        MaxValue = true
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PictureBookSize_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        Category = 2,
-                        InitValue = -1,
-                        MaxValue = 65536,
-                        MinValue = -1
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"EquipTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
-
-                    flag = new(
-                        $"PorchTime_{actorName}",
-                        FlagUnionType.S32,
-                        isSave: true
-                    ) {
-                        MaxValue = 2147483647
-                    };
-                    mgr.Add(flag);
-                    flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
             }
         }

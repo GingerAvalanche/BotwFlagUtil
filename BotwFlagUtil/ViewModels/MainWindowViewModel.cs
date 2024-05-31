@@ -242,7 +242,7 @@ public class MainWindowViewModel : ViewModelBase
 
         generator.ReplaceManager(new());
         generator.GenerateEventFlags();
-        generator.GenerateItemFlags();
+        generator.GenerateActorFlags();
         generator.GenerateMapFlags();
 
         IEnumerable<Flag> flags = generator.mgr.GetAllFlags();
