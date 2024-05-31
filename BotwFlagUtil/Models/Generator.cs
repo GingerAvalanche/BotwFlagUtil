@@ -62,6 +62,7 @@ namespace BotwFlagUtil
             {
                 return;
             }
+            HashSet<Flag> flagsToAdd = [];
             foreach (string fileName in Directory.GetFiles(
                 path, "*.sbeventpack"
             ))
@@ -96,10 +97,7 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Bool);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Bool));
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(actionFlag))
@@ -107,10 +105,7 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.F32);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.F32));
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(actionFlag))
@@ -118,10 +113,7 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.S32);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.S32));
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(actionFlag))
@@ -129,10 +121,7 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.String);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.String));
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(actionFlag))
@@ -140,10 +129,7 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Vec3));
                                                 }
                                             }
                                         }
@@ -164,10 +150,7 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Bool);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Bool));
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(queryFlag))
@@ -175,10 +158,7 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.F32);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.F32));
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(queryFlag))
@@ -186,10 +166,7 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.S32);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.S32));
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(queryFlag))
@@ -197,10 +174,7 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.String);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.String));
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(queryFlag))
@@ -208,10 +182,7 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
-                                                    mgr.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Vec3));
                                                 }
                                             }
                                         }
@@ -221,6 +192,12 @@ namespace BotwFlagUtil
                         }
                     }
                 }
+            }
+            foreach (Flag flag in flagsToAdd)
+            {
+                mgr.Add(flag, FlagStringType.String32);
+                // NO idea what event flags should look like, aside from name, hash, type
+                flagConfidence[flag.HashValue] = GeneratorConfidence.Bad;
             }
         }
 
