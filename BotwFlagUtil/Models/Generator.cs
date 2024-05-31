@@ -35,6 +35,7 @@ namespace BotwFlagUtil
         [
             "DgnObj_DLC_Weapon_Sword_502",
             "Priest_Boss_Giant",
+            "Priest_Boss_Normal",
             "Priest_Boss_ShadowClone_Real",
         ];
         private static readonly HashSet<string> noShopFlagActors =
