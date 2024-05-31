@@ -323,13 +323,13 @@ namespace BotwFlagUtil
                     confidence = 0;
                     if (actorName.Contains("TBox"))
                     {
-                        if (
-                            map.GetValue(keyTable, "!Parameters")
-                                .GetMap()
-                                .TryGetValue(keyTable, "EnableRevival", out ImmutableByml enableRevival)
+                        if (map.GetValue(keyTable, "!Parameters").GetMap().TryGetValue(
+                                    keyTable, "EnableRevival", out ImmutableByml enableRevival
+                            ) &&
+                            enableRevival.GetBool()
                         )
                         {
-                            resetType = enableRevival.GetInt();
+                            resetType = 1;
                         }
                         else
                         {
