@@ -68,7 +68,7 @@ namespace BotwFlagUtil
             mgr = new();
             flagConfidence = [];
             orphanedFlagHashes = [];
-            flagsToAdd = [];
+            flagsToAdd = new(new HashValueComparer());
         }
 
         public void GenerateActorFlags()
