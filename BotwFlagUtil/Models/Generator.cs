@@ -47,12 +47,21 @@ namespace BotwFlagUtil
         private static readonly Dictionary<NintendoHash, FlagCategory> zukanCategoryMap = new()
         {
             { 0x24CD75FE, FlagCategory.Animal },
+            { 0x2755F107, FlagCategory.Weapon },
             { 0x36565B66, FlagCategory.Boss },
+            { 0x682E5129, FlagCategory.Sozai },
             { 0x994AEF4B, FlagCategory.Enemy },
             { 0xBB8D80C2, FlagCategory.Other },
-            { 0x682E5129, FlagCategory.Sozai },
-            { 0x2755F107, FlagCategory.Weapon },
         };
+        private static readonly HashSet<string> armorProfiles =
+        [
+            "ArmorHead",
+            "ArmorUpper",
+            "ArmorLower",
+            //"ArmorExtra0",
+            //"ArmorExtra1",
+            //"ArmorExtra2",
+        ];
 
         public Generator()
         {
@@ -74,7 +83,6 @@ namespace BotwFlagUtil
                 return;
             }
 
-            Flag flag;
             HashSet<string> npcsToCheck = [];
             RevrsReader reader =
                 new(Yaz0.Decompress(File.ReadAllBytes(actorInfoPath)), Helpers.ModEndianness);
@@ -87,9 +95,10 @@ namespace BotwFlagUtil
                 ImmutableBymlMap map = actor.GetMap();
                 map.TryGetValue(keyTable, "name", out ImmutableByml nameNode);
                 string actorName = nameNode.GetString(stringTable);
+                string profile = string.Empty;
 
-                if (map.TryGetValue(keyTable, "profile", out ImmutableByml profile) &&
-                    profile.GetString(stringTable) == "NPC")
+                if (map.TryGetValue(keyTable, "profile", out ImmutableByml profileNode) &&
+                    (profile = profileNode.GetString(stringTable)) == "NPC")
                 {
                     npcsToCheck.Add(actorName);
                 }
@@ -100,31 +109,48 @@ namespace BotwFlagUtil
                     foreach (ImmutableBymlMapEntry entry in tagsMap)
                     {
                         NintendoHash entryValue = entry.Node;
+                        if (entryValue == 0x19F6C13A && profile != "Bullet")
+                        {
+                            // Skip flags for arrows that are static items
+                            // Will still generate for arrows that are actually arrows
+                            break;
+                        }
                         if (zukanCategoryMap.TryGetValue(entryValue, out FlagCategory category) &&
                             !noZukanFlagActors.Contains(actorName))
                         {
-                            flag = new(
+                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml _))
+                            {
+                                // Skip actors that are zukan but this isn't the important actor
+                                continue;
+                            }
+                            if (actorName.StartsWith("Armor_", StringComparison.Ordinal) &&
+                                map.TryGetValue(keyTable, "normal0ItemName01", out var ingredient) &&
+                                !ingredient.GetString(stringTable)
+                                    .StartsWith("Armor_", StringComparison.Ordinal))
+                            {
+                                // Skip armors that can be crafted and whose first ingredient
+                                // is another armor (aka actors that are upgraded armors)
+                                continue;
+                            }
+
+                            StageFlag(new(
                                 $"IsNewPictureBook_{actorName}",
                                 FlagUnionType.Bool,
                                 isSave: true
                             ) {
                                 MaxValue = true
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
 
-                            flag = new(
+                            StageFlag(new(
                                 $"IsRegisteredPictureBook_{actorName}",
                                 FlagUnionType.Bool,
                                 isSave: true
                             ) {
                                 Category = (int)category,
                                 MaxValue = true
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
 
-                            flag = new(
+                            StageFlag(new(
                                 $"PictureBookSize_{actorName}",
                                 FlagUnionType.S32,
                                 isSave: true
@@ -132,59 +158,83 @@ namespace BotwFlagUtil
                                 InitValue = -1,
                                 MaxValue = 65536,
                                 MinValue = -1
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
                         }
 
                         if (entryValue.uvalue == 0xE0194F30) // CanGetPouch
                         {
-                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml _))
+                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml drops) &&
+                                drops.GetMap().Count > 0)
                             {
                                 // Skip actors that can be got but give a different actor
                                 continue;
                             }
+                            if (!map.TryGetValue(keyTable, "itemSellingPrice", out ImmutableByml _))
+                            {
+                                // Skip actors that can be got but don't have a sale price node
+                                continue;
+                            }
+                            if (armorProfiles.Contains(profile))
+                            {
+                                // Skip armors; game behavior means the IsGet Demo will always
+                                // be played for them, regardless of the flag value
+                                continue;
+                            }
 
-                            flag = new(
+                            StageFlag(new(
                                 $"IsGet_{actorName}",
                                 FlagUnionType.Bool,
                                 isOneTrigger: true,
                                 isSave: true
                             ) {
                                 MaxValue = true
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
                         }
 
+                        // Until further notice, don't bother adding telemetry flags
+                        // There's enough vanilla items without them that it can be
+                        // assumed that there is graceful handling in the game exe
+                        // in the case of missing telemetry flags
+                        /*
                         if (entryValue.uvalue == 0x289F28B5) // CanEquip
                         {
-                            flag = new(
+                            if (actorName.StartsWith("Armor_", StringComparison.Ordinal) &&
+                                map.TryGetValue(keyTable, "normal0ItemName01", out var ingredient) &&
+                                !ingredient.GetString(stringTable)
+                                    .StartsWith("Armor_", StringComparison.Ordinal))
+                            {
+                                // Skip armors that can be crafted and whose first ingredient
+                                // is another armor (aka actors that are upgraded armors)
+                                continue;
+                            }
+
+                            StageFlag(new(
                                 $"EquipTime_{actorName}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
                                 MaxValue = 2147483647
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
 
-                            flag = new(
+                            StageFlag(new(
                                 $"PorchTime_{actorName}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
                                 MaxValue = 2147483647
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
                         }
+                        */
                     }
                 }
             }
 
             foreach (string actorName in npcsToCheck)
             {
+                if (noShopFlagActors.Contains(actorName))
+                {
+                    continue; // Ignore DressFairies, their inventory is fake
+                }
                 string path = Helpers.GetFullModPath($"Actor/Pack/{actorName}.sbactorpack");
                 if (path == string.Empty)
                 {
@@ -204,15 +254,13 @@ namespace BotwFlagUtil
                     continue;
                 }
 
-                flag = new(
+                StageFlag(new(
                     $"{actorName}_SoldOut",
                     FlagUnionType.Bool,
                     isSave: true
                 ) {
                     MaxValue = true
-                };
-                flagsToAdd.Add(flag);
-                flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                }, GeneratorConfidence.Definite);
 
                 AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
                 foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
@@ -226,15 +274,13 @@ namespace BotwFlagUtil
                     {
                         if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
                         {
-                            flag = new(
+                            StageFlag(new(
                                 $"{actorName}_{tableEntry.Value}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
                                 MaxValue = 65535
-                            };
-                            flagsToAdd.Add(flag);
-                            flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
+                            }, GeneratorConfidence.Definite);
                         }
                     }
                 }
@@ -250,7 +296,6 @@ namespace BotwFlagUtil
             {
                 return;
             }
-            HashSet<Flag> flagsToAdd = [];
             foreach (string fileName in Directory.GetFiles(
                 path, "*.sbeventpack"
             ))
@@ -285,10 +330,8 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Bool);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.Bool),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(actionFlag))
@@ -296,10 +339,8 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.F32);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.F32),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(actionFlag))
@@ -307,10 +348,8 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.S32);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.S32),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(actionFlag))
@@ -318,10 +357,8 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.String);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.String),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(actionFlag))
@@ -329,10 +366,8 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.Vec3),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                         }
@@ -353,10 +388,8 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Bool);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.Bool),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(queryFlag))
@@ -364,10 +397,8 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.F32);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.F32),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(queryFlag))
@@ -375,10 +406,8 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.S32);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.S32),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(queryFlag))
@@ -386,10 +415,8 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.String);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.String),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(queryFlag))
@@ -397,10 +424,8 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
-                                                    flagsToAdd.Add(flag);
-                                                    flagConfidence[flag.HashValue] =
-                                                        GeneratorConfidence.Bad;
+                                                    StageFlag(new(flagName, FlagUnionType.Vec3),
+                                                        GeneratorConfidence.Bad);
                                                 }
                                             }
                                         }
@@ -620,8 +645,7 @@ namespace BotwFlagUtil
                     )
                 )
                 {
-                    flagsToAdd.Add(value);
-                    flagConfidence[value.HashValue] = confidence;
+                    StageFlag(value, confidence);
                 }
                 else
                 {
@@ -671,11 +695,7 @@ namespace BotwFlagUtil
                     )
                 )
                 {
-                    if (!flagConfidence.ContainsKey(value.HashValue))
-                    {
-                        flagsToAdd.Add(value);
-                        flagConfidence[value.HashValue] = confidence;
-                    }
+                    StageFlag(value, confidence);
                 }
                 else
                 {
@@ -719,13 +739,12 @@ namespace BotwFlagUtil
                     (str = flagByml.GetString(stringTable)) != null &&
                     !Helpers.VanillaLocSaveFlags.Contains(str))
                 {
-                    flagsToAdd.Add(new(str, FlagUnionType.S32, isSave: true, resetType: 0)
+                    StageFlag(new(str, FlagUnionType.S32, isSave: true, resetType: 0)
                     {
                         InitValue = 0,
                         MaxValue = 2147483647,
                         MinValue = -2147483648
-                    });
-                    flagConfidence[Crc32.Compute(str)] = GeneratorConfidence.Definite;
+                    }, GeneratorConfidence.Definite);
                 }
                 if (markerMap.TryGetValue(keyTable, "Icon", out ImmutableByml icon) &&
                     icon.GetString(stringTable) == "Dungeon" &&
@@ -733,25 +752,21 @@ namespace BotwFlagUtil
                     (str = messageId.GetString(stringTable)) != string.Empty &&
                     Helpers.ModShrineLocs.ContainsKey(str))
                 {
-                    flagsToAdd.Add(new(
+                    StageFlag(new(
                         $"Enter_{str}",
                         FlagUnionType.Bool,
                         isOneTrigger: true,
                         isSave: true,
                         resetType: 0
-                    ));
-                    flagConfidence[Crc32.Compute($"Enter_{str}")] =
-                        GeneratorConfidence.Definite;
+                    ), GeneratorConfidence.Definite);
 
-                    flagsToAdd.Add(new(
+                    StageFlag(new(
                         $"CompleteTreasure_{str}",
                         FlagUnionType.Bool,
                         isOneTrigger: true,
                         isSave: true,
                         resetType: 0
-                    ));
-                    flagConfidence[Crc32.Compute($"CompleteTreasure_{str}")] =
-                        GeneratorConfidence.Definite;
+                    ), GeneratorConfidence.Definite);
                 }
             }
         }
@@ -851,6 +866,14 @@ namespace BotwFlagUtil
             flagConfidence = mgr.GetAllFlags()
                 .Select(f => (f.HashValue, GeneratorConfidence.Definite))
                 .ToDictionary();
+        }
+
+        private void StageFlag(Flag flag, GeneratorConfidence confidence)
+        {
+            if (flagsToAdd.Add(flag))
+            {
+                flagConfidence[flag.HashValue] = confidence;
+            }
         }
 
         public void FinalizeGeneration()
