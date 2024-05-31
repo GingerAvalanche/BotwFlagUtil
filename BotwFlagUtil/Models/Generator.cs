@@ -38,6 +38,7 @@ namespace BotwFlagUtil
         public FlagMgr mgr;
         public Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
         private readonly HashSet<NintendoHash> orphanedFlagHashes;
+        private readonly HashSet<Flag> flagsToAdd;
         private static readonly string[] linkTagFlagNames =
         [
             "{0}",
@@ -51,6 +52,7 @@ namespace BotwFlagUtil
             mgr = new();
             flagConfidence = [];
             orphanedFlagHashes = [];
+            flagsToAdd = [];
         }
 
         public void GenerateActorFlags()
@@ -69,10 +71,6 @@ namespace BotwFlagUtil
             ))
             {
                 string actorName = Path.GetFileNameWithoutExtension(path);
-                if (Helpers.vanillaHasFlags.Any(pair => pair.Value.Contains(actorName)))
-                {
-                    continue;
-                }
                 Flag flag;
                 if (actorName.StartsWith("Animal_", StringComparison.Ordinal))
                 {
@@ -83,7 +81,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -94,7 +92,7 @@ namespace BotwFlagUtil
                         Category = 2,
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -107,7 +105,7 @@ namespace BotwFlagUtil
                         MaxValue = 65536,
                         MinValue = -1
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     RevrsReader reader =
@@ -129,7 +127,7 @@ namespace BotwFlagUtil
                                 ) {
                                     MaxValue = true
                                 };
-                                mgr.Add(flag);
+                                flagsToAdd.Add(flag);
                                 flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                                 break;
                             }
@@ -146,7 +144,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -156,7 +154,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = 2147483647
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -166,7 +164,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = 2147483647
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
                 else if (actorName.StartsWith("Enemy_", StringComparison.Ordinal))
@@ -178,7 +176,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -189,7 +187,7 @@ namespace BotwFlagUtil
                         Category = 3,
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -202,7 +200,7 @@ namespace BotwFlagUtil
                         MaxValue = 65536,
                         MinValue = -1
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
                 else if (actorName.StartsWith("Item_", StringComparison.Ordinal))
@@ -215,7 +213,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -225,7 +223,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -236,7 +234,7 @@ namespace BotwFlagUtil
                         Category = 4,
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Good;
 
                     flag = new(
@@ -249,7 +247,7 @@ namespace BotwFlagUtil
                         MaxValue = 65536,
                         MinValue = -1
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
                 else if (actorName.StartsWith("Npc_", StringComparison.OrdinalIgnoreCase))
@@ -274,7 +272,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
@@ -296,7 +294,7 @@ namespace BotwFlagUtil
                                 ) {
                                     MaxValue = 65535
                                 };
-                                mgr.Add(flag);
+                                flagsToAdd.Add(flag);
                                 flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                             }
                         }
@@ -312,7 +310,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -322,7 +320,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -333,7 +331,7 @@ namespace BotwFlagUtil
                         Category = 5,
                         MaxValue = true
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -346,7 +344,7 @@ namespace BotwFlagUtil
                         MaxValue = 65536,
                         MinValue = -1
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -356,7 +354,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = 2147483647
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
 
                     flag = new(
@@ -366,7 +364,7 @@ namespace BotwFlagUtil
                     ) {
                         MaxValue = 2147483647
                     };
-                    mgr.Add(flag);
+                    flagsToAdd.Add(flag);
                     flagConfidence[flag.HashValue] = GeneratorConfidence.Definite;
                 }
             }
@@ -416,7 +414,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Bool));
+                                                    Flag flag = new(flagName, FlagUnionType.Bool);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(actionFlag))
@@ -424,7 +425,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.F32));
+                                                    Flag flag = new(flagName, FlagUnionType.F32);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(actionFlag))
@@ -432,7 +436,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.S32));
+                                                    Flag flag = new(flagName, FlagUnionType.S32);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(actionFlag))
@@ -440,7 +447,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.String));
+                                                    Flag flag = new(flagName, FlagUnionType.String);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(actionFlag))
@@ -448,7 +458,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Vec3));
+                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                         }
@@ -469,7 +482,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Bool));
+                                                    Flag flag = new(flagName, FlagUnionType.Bool);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(queryFlag))
@@ -477,7 +493,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.F32));
+                                                    Flag flag = new(flagName, FlagUnionType.F32);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.intFlags.Contains(queryFlag))
@@ -485,7 +504,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.S32));
+                                                    Flag flag = new(flagName, FlagUnionType.S32);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.stringFlags.Contains(queryFlag))
@@ -493,7 +515,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.String));
+                                                    Flag flag = new(flagName, FlagUnionType.String);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                             else if (Helpers.vec3Flags.Contains(queryFlag))
@@ -501,7 +526,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    flagsToAdd.Add(new(flagName, FlagUnionType.Vec3));
+                                                    Flag flag = new(flagName, FlagUnionType.Vec3);
+                                                    flagsToAdd.Add(flag);
+                                                    flagConfidence[flag.HashValue] =
+                                                        GeneratorConfidence.Bad;
                                                 }
                                             }
                                         }
@@ -511,12 +539,6 @@ namespace BotwFlagUtil
                         }
                     }
                 }
-            }
-            foreach (Flag flag in flagsToAdd)
-            {
-                mgr.Add(flag, FlagStringType.String32);
-                // NO idea what event flags should look like, aside from name, hash, type
-                flagConfidence[flag.HashValue] = GeneratorConfidence.Bad;
             }
         }
 
@@ -727,7 +749,7 @@ namespace BotwFlagUtil
                     )
                 )
                 {
-                    mgr.Add(value);
+                    flagsToAdd.Add(value);
                     flagConfidence[value.HashValue] = confidence;
                 }
                 else
@@ -780,7 +802,7 @@ namespace BotwFlagUtil
                 {
                     if (!flagConfidence.ContainsKey(value.HashValue))
                     {
-                        mgr.Add(value);
+                        flagsToAdd.Add(value);
                         flagConfidence[value.HashValue] = confidence;
                     }
                 }
@@ -826,7 +848,7 @@ namespace BotwFlagUtil
                     (str = flagByml.GetString(stringTable)) != null &&
                     !Helpers.VanillaLocSaveFlags.Contains(str))
                 {
-                    mgr.Add(new(str, FlagUnionType.S32, isSave: true, resetType: 0)
+                    flagsToAdd.Add(new(str, FlagUnionType.S32, isSave: true, resetType: 0)
                     {
                         InitValue = 0,
                         MaxValue = 2147483647,
@@ -840,7 +862,7 @@ namespace BotwFlagUtil
                     (str = messageId.GetString(stringTable)) != string.Empty &&
                     Helpers.ModShrineLocs.ContainsKey(str))
                 {
-                    mgr.Add(new(
+                    flagsToAdd.Add(new(
                         $"Enter_{str}",
                         FlagUnionType.Bool,
                         isOneTrigger: true,
@@ -850,7 +872,7 @@ namespace BotwFlagUtil
                     flagConfidence[Crc32.Compute($"Enter_{str}")] =
                         GeneratorConfidence.Definite;
 
-                    mgr.Add(new(
+                    flagsToAdd.Add(new(
                         $"CompleteTreasure_{str}",
                         FlagUnionType.Bool,
                         isOneTrigger: true,
@@ -958,6 +980,22 @@ namespace BotwFlagUtil
             flagConfidence = mgr.GetAllFlags()
                 .Select(f => (f.HashValue, GeneratorConfidence.Definite))
                 .ToDictionary();
+        }
+
+        public void FinalizeGeneration()
+        {
+            foreach (Flag flag in flagsToAdd)
+            {
+                if (Helpers.vanillaFlagHashes.Contains(flag.HashValue))
+                {
+                    flagConfidence.Remove(flag.HashValue);
+                }
+                else
+                {
+                    mgr.Add(flag);
+                }
+            }
+            flagsToAdd.Clear();
         }
     }
 }

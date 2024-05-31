@@ -235,9 +235,10 @@ public class MainWindowViewModel : ViewModelBase
         Helpers.RootDir = rootDir;
 
         generator.ReplaceManager(new());
-        generator.GenerateEventFlags();
         generator.GenerateActorFlags();
+        generator.GenerateEventFlags();
         generator.GenerateMapFlags();
+        generator.FinalizeGeneration();
 
         IEnumerable<Flag> flags = generator.mgr.GetAllFlags();
         List<string> flagNamesTemp = new(flags.Count());
