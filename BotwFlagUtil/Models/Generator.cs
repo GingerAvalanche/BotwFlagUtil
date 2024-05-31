@@ -859,7 +859,7 @@ namespace BotwFlagUtil
             if (Directory.Exists(mainfieldPath))
             {
                 foreach (string path in Directory.EnumerateFiles(
-                    mainfieldPath, "*_*.smubin", options
+                    mainfieldPath, "?-?_*.smubin", options
                 ))
                 {
                     Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(path));
