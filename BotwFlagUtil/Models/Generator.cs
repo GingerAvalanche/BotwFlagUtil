@@ -40,10 +40,10 @@ namespace BotwFlagUtil
         private readonly HashSet<NintendoHash> orphanedFlagHashes;
         private static readonly string[] linkTagFlagNames =
         [
-            "{}",
-            "Clear_{}",
-            "Open_{}",
-            "{}_{}_{}"
+            "{0}",
+            "Clear_{0}",
+            "Open_{0}",
+            "{0}_{1}_{2}"
         ];
 
         public Generator()
