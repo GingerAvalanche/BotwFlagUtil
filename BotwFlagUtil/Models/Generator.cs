@@ -98,6 +98,12 @@ namespace BotwFlagUtil
                 string actorName = nameNode.GetString(stringTable);
                 string profile = string.Empty;
 
+                if (Helpers.GetFullModPath($"Actor/Pack/{actorName}.sbactorpack") == string.Empty)
+                {
+                    // Don't generate anything for actors not included in this mod
+                    continue;
+                }
+
                 if (map.TryGetValue(keyTable, "profile", out ImmutableByml profileNode) &&
                     (profile = profileNode.GetString(stringTable)) == "NPC")
                 {
