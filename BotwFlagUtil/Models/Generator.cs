@@ -192,11 +192,6 @@ namespace BotwFlagUtil
                             }, GeneratorConfidence.Definite);
                         }
 
-                        // Until further notice, don't bother adding telemetry flags
-                        // There's enough vanilla items without them that it can be
-                        // assumed that there is graceful handling in the game exe
-                        // in the case of missing telemetry flags
-                        /*
                         if (entryValue.uvalue == 0x289F28B5) // CanEquip
                         {
                             if (actorName.StartsWith("Armor_", StringComparison.Ordinal) &&
@@ -225,7 +220,6 @@ namespace BotwFlagUtil
                                 MaxValue = 2147483647
                             }, GeneratorConfidence.Definite);
                         }
-                        */
                     }
                 }
             }
