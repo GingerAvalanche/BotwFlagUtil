@@ -151,7 +151,10 @@ namespace BotwFlagUtil.GameData
             }
             if (Contains(flag.HashValue))
             {
-                throw new ArgumentException($"Cannot add {flag.DataName}, already exists", nameof(flag));
+                throw new ArgumentException(
+                    $"{flag.DataName} already exists, cannot automatically determine which to use",
+                    nameof(flag)
+                );
             }
             if (flagType == FlagUnionType.S32)
             {
