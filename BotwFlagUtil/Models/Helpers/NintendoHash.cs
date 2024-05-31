@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BymlLibrary;
 
 namespace BotwFlagUtil
 {
+    [JsonConverter(typeof(NintendoHashConverter))]
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct NintendoHash : IEquatable<NintendoHash>
     {
@@ -79,5 +82,39 @@ namespace BotwFlagUtil
             return false;
         }
         public readonly override int GetHashCode() => uvalue.GetHashCode();
+
+        private class NintendoHashConverter : JsonConverter<NintendoHash>
+        {
+            public override NintendoHash Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                JsonTokenType type = reader.TokenType;
+                if (type == JsonTokenType.Number)
+                {
+                    if (reader.TryGetInt32(out int intVal))
+                    {
+                        return intVal;
+                    }
+                    else if (reader.TryGetUInt32(out uint uintVal))
+                    {
+                        return uintVal;
+                    }
+                    else
+                    {
+                        string? val = reader.GetString();
+                        if (val != null && val.StartsWith("!u 0", StringComparison.Ordinal))
+                        {
+                            return Convert.ToUInt32(val[5..], 16);
+                        }
+                        throw new JsonException($"NintendoHash must be int or uint, was {val ?? "null"}");
+                    }
+                }
+                throw new JsonException($"NintendoHash must be Number, was given {type}");
+            }
+
+            public override void Write(Utf8JsonWriter writer, NintendoHash value, JsonSerializerOptions options)
+            {
+                JsonSerializer.Serialize(value.ToString(), options);
+            }
+        }
     }
 }
