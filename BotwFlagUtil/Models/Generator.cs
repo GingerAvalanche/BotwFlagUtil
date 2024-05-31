@@ -331,8 +331,19 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    StageFlag(new(flagName, FlagUnionType.Bool),
-                                                        GeneratorConfidence.Bad);
+                                                    Flag flag = new(flagName, FlagUnionType.Bool) {
+                                                        MaxValue = true,
+                                                    };
+                                                    GeneratorConfidence confidence =
+                                                        GeneratorConfidence.Mediocre;
+                                                    if (flagName.StartsWith("IsGet_",
+                                                        StringComparison.Ordinal))
+                                                    {
+                                                        flag.IsOneTrigger = true;
+                                                        flag.IsSave = true;
+                                                        confidence = GeneratorConfidence.Definite;
+                                                    }
+                                                    StageFlag(flag, confidence);
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(actionFlag))
@@ -389,8 +400,19 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    StageFlag(new(flagName, FlagUnionType.Bool),
-                                                        GeneratorConfidence.Bad);
+                                                    Flag flag = new(flagName, FlagUnionType.Bool) {
+                                                        MaxValue = true,
+                                                    };
+                                                    GeneratorConfidence confidence =
+                                                        GeneratorConfidence.Mediocre;
+                                                    if (flagName.StartsWith("IsGet_",
+                                                        StringComparison.Ordinal))
+                                                    {
+                                                        flag.IsOneTrigger = true;
+                                                        flag.IsSave = true;
+                                                        confidence = GeneratorConfidence.Definite;
+                                                    }
+                                                    StageFlag(flag, confidence);
                                                 }
                                             }
                                             else if (Helpers.floatFlags.Contains(queryFlag))
