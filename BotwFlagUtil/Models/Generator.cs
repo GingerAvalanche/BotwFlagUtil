@@ -443,6 +443,10 @@ namespace BotwFlagUtil
             {
                 objMap = modObjs[i].GetMap();
                 modHashes[i] = objMap.GetValue(modKeyTable, "HashId");
+                if (stockHashes.Contains(modHashes[i]))
+                {
+                    continue;
+                }
                 if (
                     GenerateFlagForMapActor(
                         modObjs[i],
