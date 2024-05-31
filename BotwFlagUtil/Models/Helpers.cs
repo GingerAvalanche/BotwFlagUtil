@@ -585,7 +585,7 @@ namespace BotwFlagUtil
             string path = GetFullStockPath($"Map/MainField/{section}/{fileName}");
             if (File.Exists(path))
             {
-                reader = new(File.ReadAllBytes(path), ModEndianness);
+                reader = new(Yaz0.Decompress(File.ReadAllBytes(path)), ModEndianness);
                 return true;
             }
             reader = default;
