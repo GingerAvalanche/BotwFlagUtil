@@ -69,6 +69,10 @@ namespace BotwFlagUtil
             ))
             {
                 string actorName = Path.GetFileNameWithoutExtension(path);
+                if (Helpers.vanillaHasFlags.Any(pair => pair.Value.Contains(actorName)))
+                {
+                    continue;
+                }
                 Flag flag;
                 if (actorName.StartsWith("Animal_", StringComparison.Ordinal))
                 {
