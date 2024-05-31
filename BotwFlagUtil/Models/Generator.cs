@@ -94,7 +94,7 @@ namespace BotwFlagUtil
                     npcsToCheck.Add(actorName);
                 }
 
-                if (!map.TryGetValue(keyTable, "tags", out ImmutableByml tags))
+                if (map.TryGetValue(keyTable, "tags", out ImmutableByml tags))
                 {
                     ImmutableBymlMap tagsMap = tags.GetMap();
                     foreach (ImmutableBymlMapEntry entry in tagsMap)
