@@ -630,7 +630,7 @@ namespace BotwFlagUtil
                             resetType: 0,
                             isRevival: makeSaveFlag == 3
                         ) {
-                            Category = makeSaveFlag == 1 ? 1 : null,
+                            Category = makeSaveFlag == 1 ? (int)FlagCategory.Clear : null,
                             InitValue = 0,
                             MaxValue = s32 ? 1 : true,
                             MinValue = s32 ? 0 : false
