@@ -538,7 +538,7 @@ namespace BotwFlagUtil
             string rootDir;
             if (ModEndianness == Endianness.Big)
             {
-                if (relativePath.Contains("Map"))
+                if (File.Exists(Path.Combine(settings.dlcDir, relativePath)))
                 {
                     rootDir = settings.dlcDir;
                 }
@@ -553,7 +553,7 @@ namespace BotwFlagUtil
             }
             else
             {
-                if (relativePath.Contains("Map"))
+                if (File.Exists(Path.Combine(settings.dlcDirNx, relativePath)))
                 {
                     rootDir = settings.dlcDirNx;
                 }
