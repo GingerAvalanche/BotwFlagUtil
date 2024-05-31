@@ -432,7 +432,7 @@ namespace BotwFlagUtil
                 {
                     allShrineLocs = new(VanillaShrineLocs); // Shallow copy, will never edit, only add new
                     string staticPath = GetFullModPath("Map/MainField/Static.smubin");
-                    if (File.Exists(staticPath))
+                    if (staticPath != string.Empty)
                     {
                         Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(staticPath));
                         RevrsReader reader = new(bytes, ModEndianness);

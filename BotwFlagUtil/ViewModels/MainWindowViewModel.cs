@@ -308,8 +308,14 @@ public class MainWindowViewModel : ViewModelBase
         if (Helpers.RootDir != null)
         {
             string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
-            if (!File.Exists(bootupPath))
+            if (bootupPath == string.Empty)
             {
+                bootupPath = Path.Combine(
+                    Helpers.RootDir,
+                    Helpers.ModEndianness == Revrs.Endianness.Big ? "content" :
+                        "01007EF00011E800/romfs",
+                    "Pack/Bootup.pack"
+                );
                 File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
             }
             generator.mgr.Add(flag);

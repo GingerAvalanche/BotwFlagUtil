@@ -360,7 +360,7 @@ namespace BotwFlagUtil
             string? flagName;
             // TODO: Handle event packs in titlebg (and bootup?)
             string path = Helpers.GetFullModPath("Event");
-            if (!Directory.Exists(path))
+            if (path == string.Empty)
             {
                 return;
             }
@@ -874,7 +874,7 @@ namespace BotwFlagUtil
         {
             EnumerationOptions options = new() { RecurseSubdirectories = true };
             string mainfieldPath = Helpers.GetFullModPath("Map/MainField");
-            if (Directory.Exists(mainfieldPath))
+            if (mainfieldPath != string.Empty)
             {
                 foreach (string path in Directory.EnumerateFiles(
                     mainfieldPath, "?-?_*.smubin", options
@@ -901,13 +901,13 @@ namespace BotwFlagUtil
             }
 
             string mainStaticPath = Helpers.GetFullModPath("Map/MainField/Static.smubin");
-            if (File.Exists(mainStaticPath))
+            if (mainStaticPath != string.Empty)
             {
                 GenerateMainStaticFlags(mainStaticPath);
             }
 
             string packPath = Helpers.GetFullModPath("Pack");
-            if (!Directory.Exists(packPath))
+            if (packPath == string.Empty)
             {
                 return;
             }
