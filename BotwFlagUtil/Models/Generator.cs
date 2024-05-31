@@ -6,6 +6,7 @@ using System.Text;
 using Aamp.Security.Cryptography;
 using BfevLibrary;
 using BfevLibrary.Core;
+using BotwFlagUtil.Enums;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
 using BymlLibrary;
@@ -17,22 +18,6 @@ using SarcLibrary;
 
 namespace BotwFlagUtil
 {
-    public enum MapType
-    {
-        MainField,
-        CDungeon,
-        MainFieldDungeon,
-        AocField
-    }
-    public enum GeneratorConfidence
-    {
-        Unknown,
-        Bad,
-        Mediocre,
-        Good,
-        Definite
-    }
-
     public class Generator
     {
         public FlagMgr mgr;

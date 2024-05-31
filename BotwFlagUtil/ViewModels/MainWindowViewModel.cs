@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls.Selection;
+using BotwFlagUtil.Enums;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
 using ReactiveUI;
