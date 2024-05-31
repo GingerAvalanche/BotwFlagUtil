@@ -29,6 +29,12 @@ namespace BotwFlagUtil
                     Path.Combine(AppContext.BaseDirectory, "data", "vanilla_actors.json")
                 )
             )!;
+        public static readonly HashSet<NintendoHash> vanillaFlagHashes =
+            JsonSerializer.Deserialize<HashSet<NintendoHash>>(
+                File.ReadAllText(
+                    Path.Combine(AppContext.BaseDirectory, "data", "vanilla_hash.json")
+                )
+            )!;
         public static Dictionary<string, FlagUnionType> keyToFlagType = new()
         {
             { "bool_data", FlagUnionType.Bool },
