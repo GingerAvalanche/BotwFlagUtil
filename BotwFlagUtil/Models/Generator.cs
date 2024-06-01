@@ -96,18 +96,23 @@ namespace BotwFlagUtil
                 ImmutableBymlMap map = actor.GetMap();
                 map.TryGetValue(keyTable, "name", out ImmutableByml nameNode);
                 string actorName = nameNode.GetString(stringTable);
-                string profile = string.Empty;
 
-                if (Helpers.GetFullModPath($"Actor/Pack/{actorName}.sbactorpack") == string.Empty)
+                if (map.TryGetValue(keyTable, "profile", out ImmutableByml profileNode))
                 {
-                    // Don't generate anything for actors not included in this mod
-                    continue;
-                }
-
-                if (map.TryGetValue(keyTable, "profile", out ImmutableByml profileNode) &&
-                    (profile = profileNode.GetString(stringTable)) == "NPC")
-                {
-                    npcsToCheck.Add(actorName);
+                    string profile = profileNode.GetString(stringTable);
+                    if (armorProfiles.Contains(profile))
+                    {
+                        map.TryGetValue(keyTable, "armorStarNum", out ImmutableByml starNum);
+                        if (starNum.GetInt() > 1)
+                        {
+                            // Skip flags for non-base armors, only the base armor's flags are used.
+                            continue;
+                        }
+                    }
+                    else if (profile == "NPC")
+                    {
+                        npcsToCheck.Add(actorName);
+                    }
                 }
 
                 if (map.TryGetValue(keyTable, "tags", out ImmutableByml tags))
@@ -115,33 +120,21 @@ namespace BotwFlagUtil
                     ImmutableBymlMap tagsMap = tags.GetMap();
                     foreach (ImmutableBymlMapEntry entry in tagsMap)
                     {
-                        NintendoHash entryValue = entry.Node;
-                        if (entryValue == 0x19F6C13A && profile != "Bullet")
+                        string flagActorName = actorName;
+                        if (map.TryGetValue(keyTable, "systemSameGroupActorName", out var other))
                         {
-                            // Skip flags for arrows that are static items
-                            // Will still generate for arrows that are actually arrows
-                            break;
+                            string temp = other.GetString(stringTable);
+                            if (temp != string.Empty)
+                            {
+                                flagActorName = temp;
+                            }
                         }
+                        NintendoHash entryValue = entry.Node;
                         if (zukanCategoryMap.TryGetValue(entryValue, out FlagCategory category) &&
                             !noZukanFlagActors.Contains(actorName))
                         {
-                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml _))
-                            {
-                                // Skip actors that are zukan but this isn't the important actor
-                                continue;
-                            }
-                            if (actorName.StartsWith("Armor_", StringComparison.Ordinal) &&
-                                map.TryGetValue(keyTable, "normal0ItemName01", out var ingredient) &&
-                                !ingredient.GetString(stringTable)
-                                    .StartsWith("Armor_", StringComparison.Ordinal))
-                            {
-                                // Skip armors that can be crafted and whose first ingredient
-                                // is another armor (aka actors that are upgraded armors)
-                                continue;
-                            }
-
                             StageFlag(new(
-                                $"IsNewPictureBook_{actorName}",
+                                $"IsNewPictureBook_{flagActorName}",
                                 FlagUnionType.Bool,
                                 isSave: true
                             ) {
@@ -149,7 +142,7 @@ namespace BotwFlagUtil
                             }, GeneratorConfidence.Definite);
 
                             StageFlag(new(
-                                $"IsRegisteredPictureBook_{actorName}",
+                                $"IsRegisteredPictureBook_{flagActorName}",
                                 FlagUnionType.Bool,
                                 isSave: true
                             ) {
@@ -158,7 +151,7 @@ namespace BotwFlagUtil
                             }, GeneratorConfidence.Definite);
 
                             StageFlag(new(
-                                $"PictureBookSize_{actorName}",
+                                $"PictureBookSize_{flagActorName}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
@@ -170,26 +163,8 @@ namespace BotwFlagUtil
 
                         if (entryValue.uvalue == 0xE0194F30) // CanGetPouch
                         {
-                            if (map.TryGetValue(keyTable, "drops", out ImmutableByml drops) &&
-                                drops.GetMap().Count > 0)
-                            {
-                                // Skip actors that can be got but give a different actor
-                                continue;
-                            }
-                            if (!map.TryGetValue(keyTable, "itemSellingPrice", out ImmutableByml _))
-                            {
-                                // Skip actors that can be got but don't have a sale price node
-                                continue;
-                            }
-                            if (armorProfiles.Contains(profile))
-                            {
-                                // Skip armors; game behavior means the IsGet Demo will always
-                                // be played for them, regardless of the flag value
-                                continue;
-                            }
-
                             StageFlag(new(
-                                $"IsGet_{actorName}",
+                                $"IsGet_{flagActorName}",
                                 FlagUnionType.Bool,
                                 isOneTrigger: true,
                                 isSave: true
@@ -200,18 +175,8 @@ namespace BotwFlagUtil
 
                         if (entryValue.uvalue == 0x289F28B5) // CanEquip
                         {
-                            if (actorName.StartsWith("Armor_", StringComparison.Ordinal) &&
-                                map.TryGetValue(keyTable, "normal0ItemName01", out var ingredient) &&
-                                !ingredient.GetString(stringTable)
-                                    .StartsWith("Armor_", StringComparison.Ordinal))
-                            {
-                                // Skip armors that can be crafted and whose first ingredient
-                                // is another armor (aka actors that are upgraded armors)
-                                continue;
-                            }
-
                             StageFlag(new(
-                                $"EquipTime_{actorName}",
+                                $"EquipTime_{flagActorName}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
@@ -219,7 +184,7 @@ namespace BotwFlagUtil
                             }, GeneratorConfidence.Definite);
 
                             StageFlag(new(
-                                $"PorchTime_{actorName}",
+                                $"PorchTime_{flagActorName}",
                                 FlagUnionType.S32,
                                 isSave: true
                             ) {
