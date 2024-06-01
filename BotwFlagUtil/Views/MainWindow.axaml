@@ -108,7 +108,7 @@
                        Text="IsEventAssociated:"
                        VerticalAlignment="Center"/>
             <CheckBox Grid.Column="1"
-                      IsChecked="{Binding Flag.IsEventAssociated}"
+                      IsChecked="{Binding IsEventAssociated, Mode=TwoWay}"
                       VerticalAlignment="Center"/>
           </Grid>
           <Grid Grid.Column="2" Grid.Row="0" ColumnDefinitions="1*,20">
@@ -116,7 +116,7 @@
                        Text="IsOneTrigger:"
                        VerticalAlignment="Center"/>
             <CheckBox Grid.Column="1"
-                      IsChecked="{Binding Flag.IsOneTrigger}"
+                      IsChecked="{Binding IsOneTrigger, Mode=TwoWay}"
                       VerticalAlignment="Center"/>
           </Grid>
           <Grid Grid.Column="0" Grid.Row="1" ColumnDefinitions="1*,20">
@@ -124,7 +124,7 @@
                        Text="IsProgramReadable:"
                        VerticalAlignment="Center"/>
             <CheckBox Grid.Column="1"
-                      IsChecked="{Binding Flag.IsProgramReadable}"
+                      IsChecked="{Binding IsProgramReadable, Mode=TwoWay}"
                       VerticalAlignment="Center"/>
           </Grid>
           <Grid Grid.Column="2" Grid.Row="1" ColumnDefinitions="1*,20">
@@ -132,7 +132,7 @@
                        Text="IsProgramWritable:"
                        VerticalAlignment="Center"/>
             <CheckBox Grid.Column="1"
-                      IsChecked="{Binding Flag.IsProgramWritable}"
+                      IsChecked="{Binding IsProgramWritable, Mode=TwoWay}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"/>
           </Grid>
@@ -141,7 +141,7 @@
                        Text="IsSave:"
                        VerticalAlignment="Center"/>
             <CheckBox Grid.Column="1"
-                      IsChecked="{Binding Flag.IsSave}"
+                      IsChecked="{Binding IsSave, Mode=TwoWay}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"/>
           </Grid>
@@ -151,7 +151,7 @@
                        VerticalAlignment="Center"/>
             <ComboBox Grid.Column="1"
                       ItemsSource="{Binding ResetTypes}"
-                      SelectedIndex="{Binding Flag.ResetType}"
+                      SelectedIndex="{Binding ResetType}"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"/>
           </Grid>

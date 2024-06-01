@@ -15,7 +15,6 @@ public class MainWindowViewModel : ViewModelBase
 {
     private string title = "BotwFlagUtil";
     private readonly Generator generator = new();
-    private bool skipSelectionChangedEvent = false;
 
     // Flag list
     public readonly Dictionary<string, GeneratorConfidence> confidences = [];
@@ -142,6 +141,51 @@ public class MainWindowViewModel : ViewModelBase
             }
         }
     }
+    public bool IsEventAssociated
+    {
+        get => flag.IsEventAssociated;
+        set
+        {
+            flag.IsEventAssociated = value;
+            this.RaisePropertyChanged(nameof(IsEventAssociated));
+        }
+    }
+    public bool IsOneTrigger
+    {
+        get => flag.IsOneTrigger;
+        set
+        {
+            flag.IsOneTrigger = value;
+            this.RaisePropertyChanged(nameof(IsOneTrigger));
+        }
+    }
+    public bool IsProgramReadable
+    {
+        get => flag.IsProgramReadable;
+        set
+        {
+            flag.IsProgramReadable = value;
+            this.RaisePropertyChanged(nameof(IsProgramReadable));
+        }
+    }
+    public bool IsProgramWritable
+    {
+        get => flag.IsProgramWritable;
+        set
+        {
+            flag.IsProgramWritable = value;
+            this.RaisePropertyChanged(nameof(IsProgramWritable));
+        }
+    }
+    public bool IsSave
+    {
+        get => flag.IsSave;
+        set
+        {
+            flag.IsSave = value;
+            this.RaisePropertyChanged(nameof(IsSave));
+        }
+    }
     public string[] ResetTypes
     {
         get => [
@@ -151,6 +195,15 @@ public class MainWindowViewModel : ViewModelBase
             "Reset at midnight",
             "Reset when Lord of the Mountain appears"
         ];
+    }
+    public int ResetType
+    {
+        get => flag.ResetType;
+        set
+        {
+            flag.ResetType = value;
+            this.RaisePropertyChanged(nameof(ResetType));
+        }
     }
     public bool CanConfirm
     {
@@ -191,39 +244,39 @@ public class MainWindowViewModel : ViewModelBase
 
     public void OnFlagNameSelected(object? sender, SelectionModelSelectionChangedEventArgs e)
     {
-        if (skipSelectionChangedEvent)
-        {
-            skipSelectionChangedEvent = false;
-            return;
-        }
         if (!CanConfirm)
         {
-            skipSelectionChangedEvent = true;
             FlagNameSelection.SelectedItem = currentFlagName;
         }
         else if (e.SelectedItems.Single() is string nextFlagName &&
             nextFlagName != currentFlagName && 
             generator.mgr.TryRetrieve(
-                nextFlagName, out Flag flag, out FlagUnionType fType, out FlagStringType sType
+                nextFlagName, out Flag newFlag, out FlagUnionType fType, out FlagStringType sType
             ))
         {
-            if (Flag.HashValue != 0)
+            if (flag.HashValue != 0)
             {
-                generator.mgr.Add(Flag, stringType);
+                generator.mgr.Add(flag, stringType);
             }
-            Flag = flag;
+            Flag = newFlag;
             flagType = fType;
             stringType = sType;
             currentFlagName = nextFlagName;
-            initValue = flag.InitValue.ToString();
-            maxValue = flag.MaxValue.ToString();
-            minValue = flag.MinValue.ToString();
+            initValue = newFlag.InitValue.ToString();
+            maxValue = newFlag.MaxValue.ToString();
+            minValue = newFlag.MinValue.ToString();
 
             // Bit of a workaround to keep the extra behavior of the properties from running
             this.RaisePropertyChanged(nameof(FlagType));
             this.RaisePropertyChanged(nameof(InitValue));
             this.RaisePropertyChanged(nameof(MaxValue));
             this.RaisePropertyChanged(nameof(MinValue));
+            this.RaisePropertyChanged(nameof(IsEventAssociated));
+            this.RaisePropertyChanged(nameof(IsOneTrigger));
+            this.RaisePropertyChanged(nameof(IsProgramReadable));
+            this.RaisePropertyChanged(nameof(IsProgramWritable));
+            this.RaisePropertyChanged(nameof(IsSave));
+            this.RaisePropertyChanged(nameof(ResetType));
             this.RaisePropertyChanged(nameof(UseCategory));
             this.RaisePropertyChanged(nameof(IsFlagLoaded));
         }
