@@ -360,7 +360,10 @@ namespace BotwFlagUtil
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    StageFlag(new(flagName, FlagUnionType.S32),
+                                                    StageFlag(new(flagName, FlagUnionType.S32)
+                                                        {
+                                                            MaxValue = 2147483647,
+                                                        },
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
@@ -429,7 +432,10 @@ namespace BotwFlagUtil
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
                                                 {
-                                                    StageFlag(new(flagName, FlagUnionType.S32),
+                                                    StageFlag(new(flagName, FlagUnionType.S32)
+                                                        {
+                                                            MaxValue = 2147483647,
+                                                        },
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
