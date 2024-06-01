@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,10 +38,10 @@ public class MainWindowViewModel : ViewModelBase
         private string initValue = string.Empty;
         private string maxValue = string.Empty;
         private string minValue = string.Empty;
-        private bool canConfirm = true; // Start true so that fields can populate on first load
-        private bool canConfirmInit = false;
-        private bool canConfirmMax = false;
-        private bool canConfirmMin = false;
+        private bool canConfirm = true;
+        private bool canConfirmInit = true;
+        private bool canConfirmMax = true;
+        private bool canConfirmMin = true;
 #endregion
 
 #region Current Flag Properties
