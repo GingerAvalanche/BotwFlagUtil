@@ -113,7 +113,7 @@ namespace BotwFlagUtil
 
             public override void Write(Utf8JsonWriter writer, NintendoHash value, JsonSerializerOptions options)
             {
-                JsonSerializer.Serialize(value.ToString(), options);
+                JsonSerializer.Serialize(writer, value.ToString(), options);
             }
         }
     }
