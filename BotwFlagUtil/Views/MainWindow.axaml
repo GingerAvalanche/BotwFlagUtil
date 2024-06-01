@@ -80,6 +80,7 @@
                      VerticalAlignment="Center"/>
           <TextBox Grid.Column="1"
                    Grid.Row="4"
+                   IsEnabled="{Binding IsFlagLoaded}"
                    Text="{Binding InitValue}"
                    TextWrapping="Wrap"/>
           <TextBlock Grid.Column="0"
@@ -88,6 +89,7 @@
                      VerticalAlignment="Center"/>
           <TextBox Grid.Column="1"
                    Grid.Row="5"
+                   IsEnabled="{Binding IsFlagLoaded}"
                    Text="{Binding MaxValue}"
                    TextWrapping="NoWrap"/>
           <TextBlock Grid.Column="0"
@@ -96,6 +98,7 @@
                      VerticalAlignment="Center"/>
           <TextBox Grid.Column="1"
                    Grid.Row="6"
+                   IsEnabled="{Binding IsFlagLoaded}"
                    Text="{Binding MinValue}"
                    TextWrapping="NoWrap"/>
         </Grid>

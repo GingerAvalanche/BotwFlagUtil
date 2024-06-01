@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -50,6 +50,10 @@ public class MainWindowViewModel : ViewModelBase
     {
         get => flagNames;
         set => this.RaiseAndSetIfChanged(ref flagNames, value);
+    }
+    public bool IsFlagLoaded
+    {
+        get => flag.HashValue != 0;
     }
     public bool UseCategory
     {
@@ -221,6 +225,7 @@ public class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(MaxValue));
             this.RaisePropertyChanged(nameof(MinValue));
             this.RaisePropertyChanged(nameof(UseCategory));
+            this.RaisePropertyChanged(nameof(IsFlagLoaded));
         }
     }
 
