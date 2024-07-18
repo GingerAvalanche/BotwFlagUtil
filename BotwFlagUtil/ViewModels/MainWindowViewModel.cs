@@ -376,9 +376,13 @@ public class MainWindowViewModel : ViewModelBase
                 );
                 File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
             }
+            FlagMgr compiled = FlagMgr.Open(bootupPath);
+
             generator.mgr.Add(flag);
-            generator.mgr.Write(bootupPath);
+            compiled.Merge(generator.mgr);
             generator.mgr.Remove(flag.DataName);
+
+            compiled.Write(bootupPath);
             NeedsSave = false;
         }
     }
