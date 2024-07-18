@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.Platform;
 using BotwFlagUtil.Enums;
 using BotwFlagUtil.ViewModels;
@@ -168,10 +169,10 @@ public partial class MainWindow : Window
         {
             return confidences[flagName] switch
             {
-                GeneratorConfidence.Bad => Brushes.Red,
-                GeneratorConfidence.Mediocre => Brushes.Yellow,
-                GeneratorConfidence.Good => Brushes.Green,
-                GeneratorConfidence.Definite => Brushes.Blue,
+                GeneratorConfidence.Bad => new ImmutableSolidColorBrush(4293591120),
+                GeneratorConfidence.Mediocre => new ImmutableSolidColorBrush(4288376320),
+                GeneratorConfidence.Good => new ImmutableSolidColorBrush(4278225408),
+                GeneratorConfidence.Definite => new ImmutableSolidColorBrush(4278217471),
                 _ => Brushes.Violet,
             };
         }
