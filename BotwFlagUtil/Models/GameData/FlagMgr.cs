@@ -10,7 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace BotwFlagUtil.GameData
 {
@@ -23,39 +25,33 @@ namespace BotwFlagUtil.GameData
     }
     public class FlagMgr
     {
-        [JsonInclude]
-        private readonly Dictionary<string, HashSet<Flag>> _flags;
-        private readonly HashSet<NintendoHash> _hashes;
+        private readonly Dictionary<string, Dictionary<NintendoHash, Flag>> _flags;
 
         public FlagMgr()
         {
-            HashValueComparer comparer = new();
             _flags = new() {
-                { "bool_data", new(comparer) },
-                { "bool_array_data", new(comparer) },
-                { "f32_data", new(comparer) },
-                { "f32_array_data", new(comparer) },
-                { "s32_data", new(comparer) },
-                { "s32_array_data", new(comparer) },
-                { "string_data", new(comparer) },
-                { "string64_data", new(comparer) },
-                { "string256_data", new(comparer) },
-                { "string64_array_data", new(comparer) },
-                { "string256_array_data", new(comparer) },
-                { "vector2f_data", new(comparer) },
-                { "vector2f_array_data", new(comparer) },
-                { "vector3f_data", new(comparer) },
-                { "vector3f_array_data", new(comparer) },
-                { "vector4f_data", new(comparer) },
+                { "bool_data", new() },
+                { "bool_array_data", new() },
+                { "f32_data", new() },
+                { "f32_array_data", new() },
+                { "s32_data", new() },
+                { "s32_array_data", new() },
+                { "string_data", new() },
+                { "string64_data", new() },
+                { "string256_data", new() },
+                { "string64_array_data", new() },
+                { "string256_array_data", new() },
+                { "vector2f_data", new() },
+                { "vector2f_array_data", new() },
+                { "vector3f_data", new() },
+                { "vector3f_array_data", new() },
+                { "vector4f_data", new() },
             };
-            _hashes = [];
         }
 
-        [JsonConstructor]
-        public FlagMgr(Dictionary<string, HashSet<Flag>> _flags)
+        public FlagMgr(Dictionary<string, Dictionary<NintendoHash, Flag>> _flags)
         {
             this._flags = _flags;
-            _hashes = _flags.SelectMany(kvp => kvp.Value.Select(f => f.HashValue)).ToHashSet();
         }
 
         public void AddFromBymlImmutable(ImmutableByml byml, bool? revival = null)
@@ -81,7 +77,8 @@ namespace BotwFlagUtil.GameData
                     "vector4f_data" => FlagUnionType.Vec4,
                     _ => throw new ArgumentOutOfRangeException(nameof(byml), $"Unexpected flag type: {type}"),
                 };
-                _flags[type].Add(new(node, t, keyTable, stringTable, revival));
+                Flag flag = new(node, t, keyTable, stringTable, revival);
+                _flags[type][flag.HashValue] = flag;
             }
         }
 
@@ -108,7 +105,8 @@ namespace BotwFlagUtil.GameData
                         "vector4f_data" => FlagUnionType.Vec4,
                         _ => throw new ArgumentOutOfRangeException(nameof(byml), $"Unexpected flag type: {type}"),
                     };
-                    _flags[type].Add(new(node, t, revival));
+                    Flag flag = new(node, t, revival);
+                    _flags[type][flag.HashValue] = new(node, t, revival);
                 }
             }
         }
@@ -133,8 +131,18 @@ namespace BotwFlagUtil.GameData
                 bool revival = fileName.StartsWith("/r");
                 mgr.AddFromFile(fileData, endianness, revival);
             }
-            mgr._hashes.UnionWith(mgr._flags.SelectMany(kvp => kvp.Value.Select(f => f.HashValue)).ToHashSet());
             return mgr;
+        }
+
+        public void Merge(FlagMgr other)
+        {
+            foreach ((string type, Dictionary<NintendoHash, Flag> flags) in other._flags)
+            {
+                foreach ((NintendoHash hash, Flag flag) in flags)
+                {
+                    _flags[type][hash] = flag;
+                }
+            }
         }
 
         /// <summary>
@@ -171,21 +179,20 @@ namespace BotwFlagUtil.GameData
                 if (stringType == FlagStringType.None) throw new ArgumentException("Strings must be assigned a type", nameof(stringType));
                 if (flagType == FlagUnionType.StringArray && stringType == FlagStringType.String32)
                     throw new ArgumentException("String32 not allowed for StringArray", nameof(stringType));
-                _flags[Helpers.flagAndStringTypeToKey[flagType][stringType]].Add(flag);
+                _flags[Helpers.flagAndStringTypeToKey[flagType][stringType]][flag.HashValue] = flag;
             }
             else
             {
-                _flags[Helpers.flagTypeToKey[flagType]].Add(flag);
+                _flags[Helpers.flagTypeToKey[flagType]][flag.HashValue] = flag;
             }
-            _hashes.Add(flag.HashValue);
         }
 
-        public bool Contains(NintendoHash hash) => _hashes.Contains(hash);
+        public bool Contains(NintendoHash hash) => _flags.Any(kvp => kvp.Value.ContainsKey(hash));
 
         public bool Remove(string flagName)
         {
             Flag flag = Flag.GetTempFlag(flagName);
-            return _flags.Any(kvp => kvp.Value.Remove(flag)) && _hashes.Remove(flag.HashValue);
+            return _flags.Any(kvp => kvp.Value.Remove(flag.HashValue));
         }
 
         public bool TryRetrieve(
@@ -195,12 +202,12 @@ namespace BotwFlagUtil.GameData
             out FlagStringType stringType
         )
         {
-            foreach ((string key, HashSet<Flag> flags) in _flags)
+            NintendoHash temp = Flag.GetTempFlag(flagName).HashValue;
+            foreach ((string key, Dictionary<NintendoHash, Flag> flags) in _flags)
             {
-                if (flags.TryGetValue(Flag.GetTempFlag(flagName), out flag))
+                if (flags.TryGetValue(temp, out flag))
                 {
-                    flags.Remove(flag);
-                    _hashes.Remove(flag.HashValue);
+                    flags.Remove(temp);
                     flagType = Helpers.keyToFlagType[key];
                     stringType = Helpers.keyToStringType[key];
                     return true;
@@ -212,50 +219,36 @@ namespace BotwFlagUtil.GameData
             return false;
         }
 
-        public int CountFlags()
-        {
-            return _flags.Select(kvp => kvp.Value.Count).Sum();
-        }
-
-        public int CountFlags(Func<Flag, bool> condition)
-        {
-            return _flags.Select(kvp => kvp.Value.Where(condition).Count()).Sum();
-        }
-
-        public List<string> GetFlagNames(Func<Flag, bool> condition)
-        {
-            return _flags.SelectMany(kvp => kvp.Value, (t, f) => f).Where(f => condition(f)).Select(f => f.DataName).ToList();
-        }
-
-        public List<string> ConvertFlagsByCondition(Func<Flag, bool> condition, Func<Flag, string> conversion)
-        {
-            return _flags.SelectMany(kvp => kvp.Value, (t, f) => f).Where(f => condition(f)).Select(f => conversion(f)).ToList();
-        }
-
         public IEnumerable<Flag> GetAllFlags()
         {
-            return _flags.SelectMany(kvp => kvp.Value);
+            return _flags.SelectMany(kvp => kvp.Value).Select(v => v.Value);
         }
 
         private Dictionary<string, ReadOnlyMemory<byte>> GetBgDataFiles(Endianness endianness)
         {
             Dictionary<string, IEnumerable<BymlArray>> gameFlags = [];
 
-            // I'm sorry.
-            foreach ((string type, HashSet<Flag> flags) in _flags)
+            foreach ((string type, Dictionary<NintendoHash, Flag> flags) in _flags)
             {
                 switch (type)
                 {
                     case "bool_data":
                     case "s32_data":
-                        gameFlags[$"/{type}_"] = _flags[type].Where(f => !(f.IsRevival ?? false)).Select(f => f.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
-                        gameFlags[$"/revival_{type}_"] = _flags[type].Where(f => f.IsRevival ?? false).Select(f => f.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
+                        Dictionary<bool, HashSet<Byml>> revivalOrNot = new() {
+                            { true, new() },
+                            { false, new() },
+                        };
+                        foreach (Flag flag in flags.Values) {
+                            revivalOrNot[flag.IsRevival ?? false].Add(flag.ToByml());
+                        }
+                        gameFlags[$"/{type}_"] = revivalOrNot[false].Chunk(4096).Select(c => new BymlArray(c));
+                        gameFlags[$"/revival_{type}_"] = revivalOrNot[true].Chunk(4096).Select(c => new BymlArray(c));
                         break;
                     case "string_data":
-                        gameFlags["/string32_data_"] = _flags[type].Select(f => f.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
+                        gameFlags["/string32_data_"] = _flags[type].Select(f => f.Value.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
                         break;
                     default:
-                        gameFlags[$"/{type}_"] = _flags[type].Select(f => f.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
+                        gameFlags[$"/{type}_"] = _flags[type].Select(f => f.Value.ToByml()).Chunk(4096).Select(c => new BymlArray(c));
                         break;
                 }
             }
@@ -279,7 +272,7 @@ namespace BotwFlagUtil.GameData
 
         private Dictionary<string, ReadOnlyMemory<byte>> GetSvDataFiles(Endianness endianness)
         {
-            HashSet<Flag> allFlags = _flags.SelectMany(kvp => kvp.Value).Where(f => f.IsSave).ToHashSet();
+            HashSet<Flag> allFlags = _flags.SelectMany(kvp => kvp.Value).Where(f => f.Value.IsSave).Select(v => v.Value).ToHashSet();
             IEnumerable<BymlArray> saveFlags = allFlags.Where(f => !(FlagHelpers.Caption.Contains(f.DataName) || FlagHelpers.Option.Contains(f.DataName)))
                 .Select(f => f.ToSvByml())
                 .Chunk(8192)
@@ -330,6 +323,34 @@ namespace BotwFlagUtil.GameData
             {
                 bootup.Write(ms);
                 File.WriteAllBytes(path, ms.ToArray());
+            }
+        }
+
+        private class FlagMgrConverter : JsonConverter<FlagMgr>
+        {
+            public override FlagMgr Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                Dictionary<string, HashSet<Flag>> read = JsonSerializer.Deserialize(ref reader, JsonTypeInfo.CreateJsonTypeInfo<Dictionary<string, HashSet<Flag>>>(options))!;
+                Dictionary<string, Dictionary<NintendoHash, Flag>> ret = read.Select(kvp => (kvp.Key, kvp.Value.Select(v => (v.HashValue, v)).ToDictionary())).ToDictionary();
+                HashSet<NintendoHash> temp = [];
+                foreach (Dictionary<NintendoHash, Flag> group in ret.Values)
+                {
+                    foreach (NintendoHash hash in group.Keys)
+                    {
+                        if (temp.Contains(hash))
+                        {
+                            throw new InvalidDataException($"No two flags can have the same hash: {hash}");
+                        }
+                        temp.Add(hash);
+                    }
+                }
+                return new(ret);
+            }
+
+            public override void Write(Utf8JsonWriter writer, FlagMgr value, JsonSerializerOptions options)
+            {
+                Dictionary<string, HashSet<Flag>> temp = value._flags.Select(kvp => (kvp.Key, kvp.Value.Select(v => v.Value).ToHashSet())).ToDictionary();
+                JsonSerializer.Serialize(writer, temp, options);
             }
         }
     }
