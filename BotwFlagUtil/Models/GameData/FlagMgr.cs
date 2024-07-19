@@ -189,13 +189,26 @@ namespace BotwFlagUtil.GameData
 
         public bool Contains(NintendoHash hash) => _flags.Any(kvp => kvp.Value.ContainsKey(hash));
 
+        public bool Replace(Flag flag)
+        {
+            foreach (Dictionary<NintendoHash, Flag> group in _flags.Values)
+            {
+                if (group.ContainsKey(flag.HashValue))
+                {
+                    group[flag.HashValue] = flag;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool Remove(string flagName)
         {
             Flag flag = Flag.GetTempFlag(flagName);
             return _flags.Any(kvp => kvp.Value.Remove(flag.HashValue));
         }
 
-        public bool TryRetrieve(
+        public bool TryGet(
             string flagName,
             out Flag flag,
             out FlagUnionType flagType,
@@ -207,7 +220,6 @@ namespace BotwFlagUtil.GameData
             {
                 if (flags.TryGetValue(temp, out flag))
                 {
-                    flags.Remove(temp);
                     flagType = Helpers.keyToFlagType[key];
                     stringType = Helpers.keyToStringType[key];
                     return true;
