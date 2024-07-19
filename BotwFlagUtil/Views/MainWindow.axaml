@@ -36,7 +36,13 @@
                ItemsSource="{Binding FlagNames}"
                Name="FlagSelector"
                Selection="{Binding FlagNameSelection}"
-               SelectionMode="Single,AlwaysSelected"/>
+               SelectionMode="Single,AlwaysSelected">
+        <ListBox.Styles>
+          <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+          </Style>
+        </ListBox.Styles>
+      </ListBox>
       
       <GridSplitter Grid.Column="1" Background="DarkGray" ResizeDirection="Columns"/>
 
@@ -156,6 +162,12 @@
                       VerticalAlignment="Center"/>
           </Grid>
         </Grid>
+        <Button HorizontalAlignment="Stretch"
+                Margin="0,20,0,0"
+                Name="Confirm">
+          <TextBlock HorizontalAlignment="Center"
+                     Text="{Binding ConfirmText}"/>
+        </Button>
       </StackPanel>
     </Grid>
   </Grid>

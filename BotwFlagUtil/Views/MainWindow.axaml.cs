@@ -1,19 +1,18 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Immutable;
 using Avalonia.Platform;
-using BotwFlagUtil.Enums;
 using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Tmds.DBus.Protocol;
 
 namespace BotwFlagUtil.Views;
 
@@ -32,7 +31,8 @@ public partial class MainWindow : Window
             icon = new(streamReader);
         }
 
-        FlagSelector.DataTemplates.Add(new FlagNameDataTemplate(vm));
+        //FlagSelector.DataTemplates.Add(new FlagNameDataTemplate(vm));
+        FlagSelector.ItemTemplate = new FlagNameDataTemplate(vm);
 
         About.Click += About_Click;
         Exit.Click += Exit_Click;
@@ -41,6 +41,24 @@ public partial class MainWindow : Window
         Open.Click += Open_ClickAsync;
         Save.Click += Save_Click;
         Settings.Click += Settings_Click;
+
+        Confirm.Click += Confirm_Click;
+    }
+
+    private async void Confirm_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!((MainWindowViewModel)DataContext!).Confirm())
+        {
+            await MessageBoxManager.GetMessageBoxStandard(
+                new MessageBoxStandardParams()
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Can't Confirm",
+                    ContentMessage = "Could not confirm this flag. One of the properties does not contain a valid value!",
+                    WindowIcon = icon,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                }).ShowWindowDialogAsync(this);
+        }
     }
 
     private async void About_Click(object? sender, RoutedEventArgs e)
@@ -139,17 +157,15 @@ public partial class MainWindow : Window
 
     private class FlagNameDataTemplate(MainWindowViewModel vm) : IDataTemplate
     {
-        private readonly Dictionary<string, GeneratorConfidence> confidences = vm.confidences;
-        private readonly Dictionary<string, bool> confirmeds = vm.confirmeds;
-
         public Control Build(object? param)
         {
             string flagName = (string)param!;
             var control = new TextBlock()
             {
-                Background = GetBackgroundColor(flagName),
-                Foreground = GetForegroundColor(flagName),
+                Background = vm.BgColors[flagName],
+                Foreground = vm.FgColors[flagName],
                 FontWeight = FontWeight.Bold,
+                Padding = new Thickness(12),
                 Text = flagName
             };
             return control;
@@ -157,24 +173,7 @@ public partial class MainWindow : Window
 
         public bool Match(object? data)
         {
-            return data is string flagName && confidences.ContainsKey(flagName);
-        }
-
-        public IImmutableSolidColorBrush GetBackgroundColor(string flagName)
-        {
-            return confirmeds[flagName] ? Brushes.PaleGreen : Brushes.Transparent;
-        }
-
-        public IImmutableSolidColorBrush GetForegroundColor(string flagName)
-        {
-            return confidences[flagName] switch
-            {
-                GeneratorConfidence.Bad => new ImmutableSolidColorBrush(4293591120),
-                GeneratorConfidence.Mediocre => new ImmutableSolidColorBrush(4288376320),
-                GeneratorConfidence.Good => new ImmutableSolidColorBrush(4278225408),
-                GeneratorConfidence.Definite => new ImmutableSolidColorBrush(4278217471),
-                _ => Brushes.Violet,
-            };
+            return data is string flagName && vm.BgColors.ContainsKey(flagName);
         }
     }
 }
