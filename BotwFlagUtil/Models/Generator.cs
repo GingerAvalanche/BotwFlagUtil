@@ -210,15 +210,15 @@ namespace BotwFlagUtil
                             if (entryValue.uvalue == 0xB0C9E79A) // RevivalBloodyMoon
                             {
                                 actorRevivalTypes[flagActorName] = RevivalTag.RevivalBloodyMoon;
-                    }
+                            }
                             else if (entryValue.uvalue == 0x09E9E131) // RevivalUnderGodTime
                             {
                                 actorRevivalTypes[flagActorName] = RevivalTag.RevivalUnderGodTime;
-                }
+                            }
                             else if (entryValue.uvalue == 0x9e8d2a01 || entryValue.uvalue == 0x25cd2b4d) // RevivalRandom, RevivalRandomForDrop
                             {
                                 actorRevivalTypes[flagActorName] = RevivalTag.RevivalRandom;
-            }
+                            }
                             else // all RevivalNone.*
                             {
                                 actorRevivalTypes[flagActorName] = RevivalTag.RevivalNone;
@@ -594,7 +594,7 @@ namespace BotwFlagUtil
                             goto shouldNotMakeFlag;
                         }
                         if (param.GetMap().TryGetValue(
-                                    keyTable, "EnableRevival", out ImmutableByml enableRevival
+                                keyTable, "EnableRevival", out ImmutableByml enableRevival
                             ) &&
                             enableRevival.GetBool()
                         )
@@ -606,7 +606,6 @@ namespace BotwFlagUtil
                             resetType = 0;
                             revival = false;
                         }
-                        confidence = GeneratorConfidence.Definite;
                     }
                     else if (map.TryGetValue(keyTable, "LinksToObj", out ImmutableByml objLinks))
                     {
@@ -620,14 +619,9 @@ namespace BotwFlagUtil
                             {
                                 resetType = 3;
                                 revival = false;
-                                confidence = GeneratorConfidence.Definite;
                                 break;
                             }
                         }
-                    }
-                    else
-                    {
-                        confidence = GeneratorConfidence.Mediocre;
                     }
 
                     value = new(
@@ -753,6 +747,37 @@ namespace BotwFlagUtil
             }
         }
 
+        public void GenerateLevelSensorFlags()
+        {
+            string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
+            if (File.Exists(bootupPath))
+            {
+                RevrsReader bootupReader = new(File.ReadAllBytes(bootupPath), Helpers.ModEndianness);
+                ImmutableSarc bootup = new(ref bootupReader);
+                RevrsReader levelReader = new(Yaz0.Decompress(bootup["Ecosystem/LevelSensor.sbyml"].Data), Helpers.ModEndianness);
+                ImmutableByml levelSensor = new(ref levelReader);
+                ImmutableBymlMap levelMap = levelSensor.GetMap();
+                ImmutableBymlStringTable stringTable = levelSensor.StringTable;
+                ImmutableBymlStringTable keyTable = levelSensor.KeyTable;
+                foreach (ImmutableByml entry in levelMap.GetValue(keyTable, "flag").GetArray())
+                {
+                    string flagName = entry.GetMap().GetValue(keyTable, "name").GetString(stringTable);
+                    StageFlag(new(
+                        flagName,
+                        FlagUnionType.S32,
+                        isSave: true,
+                        resetType: 0,
+                        isRevival: false
+                    )
+                    {
+                        InitValue = 0,
+                        MaxValue = 65535,
+                        MinValue = 0
+                    }, GeneratorConfidence.Good);
+                }
+            }
+        }
+
         private void GenerateMainStaticFlags(string path)
         {
             Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(path));
@@ -856,28 +881,83 @@ namespace BotwFlagUtil
                 ImmutableSarc modPack = new(ref reader);
                 bool hasStock =
                     Helpers.GetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
-                // CAREFUL: Will ImmutableSarc..ctor() like a default RevrsReader?
-                ImmutableSarc stockPack = new(ref stockReader);
 
-                foreach (string suffix in (string[])["_Static", "_Dynamic"])
+                if (hasStock)
                 {
-                    string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
-                    RevrsReader modMapReader = new(
-                        Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
-                    );
-                    ImmutableByml modMap = new(ref modMapReader);
-
-                    if (hasStock)
+                    ImmutableSarc stockPack = new(ref stockReader);
+                    foreach (string suffix in (string[])["_Static", "_Dynamic"])
                     {
+                        string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
+                        RevrsReader modMapReader = new(
+                            Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
+                        );
+                        ImmutableByml modMap = new(ref modMapReader);
+
                         RevrsReader stockMapReader = new(
                             Yaz0.Decompress(stockPack[sarcPath].Data), Helpers.ModEndianness
                         );
                         ImmutableByml stockMap = new(ref stockMapReader);
                         GenerateFlagsForMapWithDiff(modMap, stockMap, MapType.CDungeon, mapName);
                     }
-                    else
+                }
+                else
+                {
+                    foreach (string suffix in (string[])["_Static", "_Dynamic"])
                     {
-                        GenerateFlagsForMap(modMap, MapType.CDungeon, mapName);
+                        string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
+                        RevrsReader modMapReader = new(
+                            Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
+                        );
+                        GenerateFlagsForMap(new(ref modMapReader), MapType.CDungeon, mapName);
+                    }
+                }
+            }
+        }
+
+        public void GenerateQuestFlags()
+        {
+            string titleBgPath = Helpers.GetFullModPath("Pack/TitleBG.pack");
+            if (File.Exists(titleBgPath))
+            {
+                RevrsReader titleBgReader = new(File.ReadAllBytes(titleBgPath), Helpers.ModEndianness);
+                ImmutableSarc titleBg = new(ref titleBgReader);
+                RevrsReader questReader = new(Yaz0.Decompress(titleBg["Quest/QuestProduct.sbquestpack"].Data), Helpers.ModEndianness);
+                ImmutableByml questProduct = new(ref questReader);
+                ImmutableBymlStringTable stringTable = questProduct.StringTable;
+                ImmutableBymlStringTable keyTable = questProduct.KeyTable;
+                foreach (ImmutableByml entry in questProduct.GetArray())
+                {
+                    foreach (ImmutableByml stepDep in entry.GetMap().GetValue(keyTable, "StepDependencyFlags").GetArray())
+                    {
+                        string flagName = stepDep.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
+                        StageFlag(new(
+                            flagName,
+                            FlagUnionType.Bool,
+                            isSave: true,
+                            resetType: 0,
+                            isRevival: false
+                        )
+                        {
+                            InitValue = 0,
+                            MaxValue = true,
+                            MinValue = false
+                        }, GeneratorConfidence.Definite);
+                    }
+                    foreach (ImmutableByml step in entry.GetMap().GetValue(keyTable, "Steps").GetArray())
+                    {
+                        string flagName = step.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
+                        StageFlag(new(
+                            flagName,
+                            FlagUnionType.Bool,
+                            isSave: true,
+                            resetType: 0,
+                            isRevival: false
+                        )
+                        {
+                            InitValue = 0,
+                            MaxValue = true,
+                            MinValue = false
+                        }, GeneratorConfidence.Definite);
                     }
                 }
             }

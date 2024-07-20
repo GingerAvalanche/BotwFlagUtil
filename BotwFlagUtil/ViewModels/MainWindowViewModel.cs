@@ -316,8 +316,10 @@ public class MainWindowViewModel : ViewModelBase
 
         generator.ReplaceManager(new());
         generator.GenerateActorFlags();
+        generator.GenerateLevelSensorFlags();
+        generator.GenerateQuestFlags();
         generator.GenerateMapFlags();
-        generator.GenerateEventFlags();
+        generator.GenerateEventFlags(); // Last because least certain
         generator.FinalizeGeneration();
 
         IEnumerable<Flag> flags = generator.mgr.GetAllFlags();
