@@ -29,6 +29,7 @@
         <Separator/>
         <MenuItem Header="E_xit" Name="Exit"/>
       </MenuItem>
+      <MenuItem Header="_Help" Name="Help"/>
       <MenuItem Header="_About" Name="About"/>
     </Menu>
     <Grid Grid.Row="1" ColumnDefinitions="200,4,*">

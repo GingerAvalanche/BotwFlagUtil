@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
@@ -12,7 +13,6 @@ using MsBox.Avalonia.Enums;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Tmds.DBus.Protocol;
 
 namespace BotwFlagUtil.Views;
 
@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         About.Click += About_Click;
         Exit.Click += Exit_Click;
         Export.Click += Export_Click;
+        Help.Click += Help_Click;
         Import.Click += Import_Click;
         Open.Click += Open_ClickAsync;
         Save.Click += Save_Click;
@@ -89,7 +90,7 @@ public partial class MainWindow : Window
         {
             return;
         }
-        if (Avalonia.Application.Current!.ApplicationLifetime is
+        if (Application.Current!.ApplicationLifetime is
             IClassicDesktopStyleApplicationLifetime desktopLifetime)
         {
             desktopLifetime.Shutdown();
@@ -99,6 +100,25 @@ public partial class MainWindow : Window
     private void Export_Click(object? sender, RoutedEventArgs e)
     {
         ((MainWindowViewModel)DataContext!).Export();
+    }
+
+    private void Help_Click(object? sender, RoutedEventArgs e)
+    {
+        Image img = new()
+        {
+            Source = new Bitmap($"{AppContext.BaseDirectory}/Assets/help.png")
+        };
+        Window helpWindow = new()
+        {
+            Title = "Help",
+            Icon = icon,
+            Content = img,
+            //SizeToContent = SizeToContent.WidthAndHeight,
+            Height = 725,
+            Width = 1422,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        helpWindow.Show(this);
     }
 
     private void Import_Click(object? sender, RoutedEventArgs e)
