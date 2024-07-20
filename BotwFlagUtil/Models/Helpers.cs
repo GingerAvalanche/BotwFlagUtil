@@ -448,10 +448,10 @@ namespace BotwFlagUtil
                                 markerMap.TryGetValue(keyTable, "MessageID", out ImmutableByml messageId) &&
                                 !allShrineLocs.TryGetValue(messageId.GetString(stringTable), out Vec3 value))
                             {
-                                ImmutableBymlArray vec = markerMap.GetValue(keyTable, "Translate").GetArray();
-                                value.X = vec[0].GetFloat();
-                                value.Y = vec[1].GetFloat();
-                                value.Z = vec[2].GetFloat();
+                                ImmutableBymlMap vec = markerMap.GetValue(keyTable, "Translate").GetMap();
+                                value.X = vec.GetValue(keyTable, "X").GetFloat();
+                                value.Y = vec.GetValue(keyTable, "Y").GetFloat();
+                                value.Z = vec.GetValue(keyTable, "Z").GetFloat();
                                 allShrineLocs.Add(messageId.GetString(stringTable), value);
                             }
                         }
