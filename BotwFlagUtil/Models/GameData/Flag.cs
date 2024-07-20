@@ -63,6 +63,7 @@ namespace BotwFlagUtil.GameData
         public Flag(
             string dataName,
             FlagUnionType type,
+            int? category = null,
             int deleteRev = -1,
             bool isEventAssociated = false,
             bool isOneTrigger = false,
@@ -77,6 +78,7 @@ namespace BotwFlagUtil.GameData
             DataName = dataName;
             if (type != FlagUnionType.None)
             {
+                this.category = category;
                 this.deleteRev = deleteRev;
                 FlagUnionType initType = Helpers.mainTypeToInitType[type];
                 initValue = initType;
@@ -100,6 +102,9 @@ namespace BotwFlagUtil.GameData
             {
                 switch (keyTable[keyIndex].ToManaged())
                 {
+                    case "Category":
+                        category = node.GetInt();
+                        break;
                     case "DataName":
                         dataName = stringTable[node.GetStringIndex()].ToManaged();
                         break;
@@ -147,6 +152,9 @@ namespace BotwFlagUtil.GameData
             {
                 switch (key)
                 {
+                    case "Category":
+                        category = node.GetInt();
+                        break;
                     case "DataName":
                         dataName = node.GetString();
                         break;
@@ -250,6 +258,10 @@ namespace BotwFlagUtil.GameData
                 { "MinValue", minValue.ToByml() },
                 { "ResetType", resetType },
             };
+            if (category.HasValue)
+            {
+                map["Category"] = category.Value;
+            }
             return map;
         }
 
