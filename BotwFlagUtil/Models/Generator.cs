@@ -9,6 +9,7 @@ using BfevLibrary.Core;
 using BotwFlagUtil.Enums;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models.Enums;
 using BymlLibrary;
 using BymlLibrary.Nodes.Immutable.Containers;
 using CsYaz0;
@@ -24,12 +25,23 @@ namespace BotwFlagUtil
         public Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
         private readonly HashSet<NintendoHash> orphanedFlagHashes;
         private readonly HashSet<Flag> flagsToAdd;
+        private readonly Dictionary<string, RevivalTag> actorRevivalTypes;
         private static readonly string[] linkTagFlagNames =
         [
             "{0}",
             "Clear_{0}",
             "Open_{0}",
             "{0}_{1}_{2}"
+        ];
+        private static readonly HashSet<uint> revivalTags =
+        [
+            0xb0c9e79a, // RevivalBloodyMoon
+            0xdeb2c8bd, // RevivalNone
+            0x21f1c37a, // RevivalNoneForDrop
+            0x28a3a540, // RevivalNoneForUsed
+            0x9e8d2a01, // RevivalRandom
+            0x25cd2b4d, // RevivalRandomForDrop
+            0x09e9e131, // RevivalUnderGodTime
         ];
         private static readonly HashSet<string> noZukanFlagActors =
         [
@@ -70,6 +82,7 @@ namespace BotwFlagUtil
             flagConfidence = [];
             orphanedFlagHashes = [];
             flagsToAdd = new(new HashValueComparer());
+            actorRevivalTypes = [];
         }
 
         public void GenerateActorFlags()
@@ -190,6 +203,26 @@ namespace BotwFlagUtil
                             ) {
                                 MaxValue = 2147483647
                             }, GeneratorConfidence.Definite);
+                        }
+
+                        if (revivalTags.Contains(entryValue.uvalue))
+                        {
+                            if (entryValue.uvalue == 0xB0C9E79A) // RevivalBloodyMoon
+                            {
+                                actorRevivalTypes[flagActorName] = RevivalTag.RevivalBloodyMoon;
+                    }
+                            else if (entryValue.uvalue == 0x09E9E131) // RevivalUnderGodTime
+                            {
+                                actorRevivalTypes[flagActorName] = RevivalTag.RevivalUnderGodTime;
+                }
+                            else if (entryValue.uvalue == 0x9e8d2a01 || entryValue.uvalue == 0x25cd2b4d) // RevivalRandom, RevivalRandomForDrop
+                            {
+                                actorRevivalTypes[flagActorName] = RevivalTag.RevivalRandom;
+            }
+                            else // all RevivalNone.*
+                            {
+                                actorRevivalTypes[flagActorName] = RevivalTag.RevivalNone;
+                            }
                         }
                     }
                 }
@@ -449,7 +482,7 @@ namespace BotwFlagUtil
         /// - byml is a LinkTag with MakeSaveFlag 2 and mapType is MapType.CDungeon</exception>
         /// <exception cref="NotImplementedException">Thrown when byml is a LinkTag with MakeSaveFlag
         /// that is not 0-3</exception>
-        private static bool GenerateFlagForMapActor(
+        private bool GenerateFlagForMapActor(
             ImmutableByml byml,
             ImmutableBymlStringTable keyTable,
             ImmutableBymlStringTable stringTable,
@@ -546,15 +579,21 @@ namespace BotwFlagUtil
                 }
                 // If the mod has defined a new actor to place on a map, it presumably needs flags
                 // so only count out vanilla actors that don't need flags
-                else if (!Helpers.vanillaHasFlags["no_flags"].Contains(actorName))
+                //else if (!Helpers.vanillaHasFlags["no_flags"].Contains(actorName)) // Going to try using Revival tags instead
+                else if (actorRevivalTypes.TryGetValue(actorName, out RevivalTag tag) && tag != RevivalTag.RevivalNone)
                 {
                     string flagName = $"{mapType}_{actorName}_{hashId}";
-                    int resetType = mapType == MapType.MainField ? 1 : 2;
+                    int resetType = tag == RevivalTag.RevivalBloodyMoon && mapType == MapType.CDungeon ? 2 : (int)tag;
+                    int initValue = tag == RevivalTag.RevivalRandom ? GetRandomInitValue(mapName) : 0;
                     bool revival = true;
-                    confidence = 0;
+                    confidence = GeneratorConfidence.Definite;
                     if (actorName.Contains("TBox"))
                     {
-                        if (map.GetValue(keyTable, "!Parameters").GetMap().TryGetValue(
+                        if (!map.TryGetValue(keyTable, "!Parameters", out ImmutableByml param))
+                        {
+                            goto shouldNotMakeFlag;
+                        }
+                        if (param.GetMap().TryGetValue(
                                     keyTable, "EnableRevival", out ImmutableByml enableRevival
                             ) &&
                             enableRevival.GetBool()
@@ -598,7 +637,7 @@ namespace BotwFlagUtil
                         resetType: resetType,
                         isRevival: revival
                     ) {
-                        InitValue = 0,
+                        InitValue = initValue,
                         MaxValue = true,
                         MinValue = false
                     };
@@ -852,6 +891,19 @@ namespace BotwFlagUtil
             return Helpers.GetNearestShrine(
                 new Vec3(array[0].GetFloat(), array[1].GetFloat(), array[2].GetFloat())
             );
+        }
+
+        private static int GetRandomInitValue(string mapName)
+        {
+            string field = mapName.Split('_')[0];
+            if (field[1] != '-')
+            {
+                return 254;
+            }
+            string[] parts = field.Split('-');
+            int horizontal = char.Parse(parts[0]) - 65;
+            int vertical = int.Parse(parts[1]);
+            return (horizontal * 8 + vertical) * 2;
         }
 
         public void ReplaceManager(FlagMgr mgr)
