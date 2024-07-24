@@ -71,6 +71,24 @@ public class MainWindowViewModel : ViewModelBase
     {
         get => flag.Category != null;
     }
+    public string[] Categories
+    {
+        get => [
+            "Clear (Dungeon/Shrine Clear)",
+            "Animal",
+            "Enemy",
+            "Sozai (Resources/Ingredients)",
+            "Weapon (Swords/Spears/Shields/Bows)",
+            "Other",
+            "Boss",
+            "",
+            "",
+            "",
+            "Korok",
+            "DLC",
+            "HardMode",
+        ];
+    }
     public string FlagType
     {
         get => flagType.ToString();
