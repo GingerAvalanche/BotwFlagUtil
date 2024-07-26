@@ -327,7 +327,7 @@ namespace BotwFlagUtil.GameData
             }
             using (MemoryStream ms = new())
             {
-                gameDataSarc.Write(ms);
+                saveDataSarc.Write(ms);
                 bootup["GameData/savedataformat.ssarc"] = Yaz0.Compress(ms.ToArray()).ToArray();
             }
 
