@@ -29,6 +29,17 @@
         <Separator/>
         <MenuItem Header="E_xit" Name="Exit"/>
       </MenuItem>
+      <MenuItem Header="Filter" Name="Filter">
+        <MenuItem Header="Confidence" IsEnabled="False"/>
+        <MenuItem Header="Definite" Name="Blue" ToggleType="CheckBox" IsChecked="{Binding FilterBlue}"/>
+        <MenuItem Header="Good" Name="Green" ToggleType="CheckBox" IsChecked="{Binding FilterGreen}"/>
+        <MenuItem Header="Mild" Name="Yellow" ToggleType="CheckBox" IsChecked="{Binding FilterYellow}"/>
+        <MenuItem Header="Poor" Name="Red" ToggleType="CheckBox" IsChecked="{Binding FilterRed}"/>
+        <Separator/>
+        <MenuItem Header="Confidence" IsEnabled="False"/>
+        <MenuItem Header="Manual" Name="Manual" ToggleType="CheckBox" IsChecked="{Binding FilterMan}"/>
+        <MenuItem Header="Automatic" Name="Automatic" ToggleType="CheckBox" IsChecked="{Binding FilterAuto}"/>
+      </MenuItem>
       <MenuItem Header="_Help" Name="Help"/>
       <MenuItem Header="_About" Name="About"/>
     </Menu>
