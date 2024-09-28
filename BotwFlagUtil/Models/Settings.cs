@@ -42,11 +42,11 @@ namespace BotwFlagUtil
                         File.ReadAllText(Path.Combine(appdata, "bcml", "settings.json"))
                     )!;
                 value = new(
-                    bcmlSettings["game_dir"],
-                    bcmlSettings["update_dir"],
-                    bcmlSettings["dlc_dir"],
-                    bcmlSettings["game_dir_nx"],
-                    bcmlSettings["dlc_dir_nx"]
+                    bcmlSettings["game_dir"] as string ?? "",
+                    bcmlSettings["update_dir"] as string ?? "",
+                    bcmlSettings["dlc_dir"] as string ?? "",
+                    bcmlSettings["game_dir_nx"] as string ?? "",
+                    bcmlSettings["dlc_dir_nx"] as string ?? ""
                 );
             }
             else
