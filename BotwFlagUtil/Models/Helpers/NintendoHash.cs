@@ -2,6 +2,8 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Aamp.Security.Cryptography;
+using Avalonia.Rendering.Composition.Animations;
 using BymlLibrary;
 
 namespace BotwFlagUtil
@@ -52,6 +54,12 @@ namespace BotwFlagUtil
             uvalue = val;
         }
         public static implicit operator NintendoHash(uint val) => new(val);
+
+        public NintendoHash(string val)
+        {
+            uvalue = Crc32.Compute(val);
+        }
+        public static implicit operator NintendoHash(string val) => new(val);
 
         public readonly Byml ToHash()
         {
