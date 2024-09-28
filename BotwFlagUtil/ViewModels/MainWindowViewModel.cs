@@ -361,6 +361,8 @@ public class MainWindowViewModel : ViewModelBase
     public void OpenMod(string rootDir)
     {
         if (!(Directory.Exists(Path.Combine(rootDir, "content")) ||
+            Directory.Exists(Path.Combine(rootDir, "aoc")) ||
+            Directory.Exists(Path.Combine(rootDir, "01007EF00011E000", "romfs")) ||
             Directory.Exists(Path.Combine(rootDir, "01007EF00011E800", "romfs")) ||
             Directory.Exists(Path.Combine(rootDir, "01007EF00011F001", "romfs"))))
         {
