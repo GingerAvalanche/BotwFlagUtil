@@ -8,6 +8,7 @@ using Avalonia.Media;
 using BotwFlagUtil.Enums;
 using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models.Cache;
 using ReactiveUI;
 
 namespace BotwFlagUtil.ViewModels;
@@ -51,41 +52,34 @@ public class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Filter Members
-    private uint filterMask = 0b111111;
+    public int filterMask = 0b1111110;
     public bool FilterBlue
     {
-        get => Convert.ToBoolean((filterMask >> ((int)GeneratorConfidence.Definite - 1)) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << ((int)GeneratorConfidence.Definite - 1)) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << (int)GeneratorConfidence.Definite);
     }
     public bool FilterGreen
     {
-        get => Convert.ToBoolean((filterMask >> ((int)GeneratorConfidence.Good - 1)) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << ((int)GeneratorConfidence.Good - 1)) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << (int)GeneratorConfidence.Good);
     }
     public bool FilterYellow
     {
-        get => Convert.ToBoolean((filterMask >> ((int)GeneratorConfidence.Mediocre - 1)) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << ((int)GeneratorConfidence.Mediocre - 1)) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << (int)GeneratorConfidence.Mediocre);
     }
     public bool FilterRed
     {
-        get => Convert.ToBoolean((filterMask >> ((int)GeneratorConfidence.Bad - 1)) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << ((int)GeneratorConfidence.Bad - 1)) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << (int)GeneratorConfidence.Bad);
     }
     public bool FilterMan
     {
-        get => Convert.ToBoolean((filterMask >> 4) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << 4) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << 6);
     }
     public bool FilterAuto
     {
-        get => Convert.ToBoolean((filterMask >> 5) & 1);
-        set => this.RaiseAndSetIfChanged(ref filterMask, (Convert.ToUInt32(value) << 5) ^ filterMask);
+        set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << 5);
     }
     #endregion
 
     #region Current Flag Fields
-    private string currentFlagName = string.Empty;
     private Flag flag = default;
     private FlagUnionType flagType = FlagUnionType.None;
     private string initValue = string.Empty;
@@ -327,20 +321,26 @@ public class MainWindowViewModel : ViewModelBase
 
     public void OnFlagNameSelected(object? sender, SelectionModelSelectionChangedEventArgs e)
     {
-        if (e.SelectedItems.Single() is string nextFlagName &&
-            nextFlagName != currentFlagName && 
+        if (e.SelectedItems.Count > 0 &&
+            e.SelectedItems.Single() is string nextFlagName &&
+            nextFlagName != flag.DataName && 
             generator.mgr.TryGet(
                 nextFlagName, out Flag newFlag, out FlagUnionType fType, out FlagStringType sType
             ))
         {
+            // Reset the flag background color to the stored confirmation status
+            if (flag.DataName != null && confirmeds.TryGetValue(flag.DataName, out bool value))
+            {
+                BgColors[flag.DataName].Color = GetBackgroundColor(value).Color;
+            }
             Flag = newFlag;
             flagType = fType;
             stringType = sType;
-            currentFlagName = nextFlagName;
             initValue = newFlag.InitValue.ToString();
             maxValue = newFlag.MaxValue.ToString();
             minValue = newFlag.MinValue.ToString();
-            SetConfirmText(confirmeds[nextFlagName]);
+            confirmed = confirmeds[nextFlagName];
+            SetConfirmText(confirmed);
 
             // Bit of a workaround to keep the extra behavior of the properties from running
             this.RaisePropertyChanged(nameof(FlagType));
@@ -368,7 +368,8 @@ public class MainWindowViewModel : ViewModelBase
         {
             return;
         }
-        Title = $"BotwFlagUtil - {Path.GetFileName(rootDir)}";
+        string modName = Path.GetFileName(rootDir);
+        Title = $"BotwFlagUtil - {modName}";
         Helpers.RootDir = rootDir;
 
         generator.ReplaceManager(new());
@@ -397,7 +398,16 @@ public class MainWindowViewModel : ViewModelBase
         flagNamesTemp.Sort();
         allFlagNames = flagNamesTemp;
         FlagNames = flagNamesTemp.Where(FlagListFilter).ToList();
+
+        FlagCache.Init(modName, generator.mgr);
+        foreach (Flag recalled in FlagCache.RecallAll())
+        {
+            generator.mgr.Replace(recalled);
+            BgColors[recalled.DataName] = GetBackgroundColor(true);
+            confirmeds[recalled.DataName] = true;
+        }
         NeedsSave = true;
+        UpdateFilter();
     }
 
     public void Export()
@@ -443,18 +453,23 @@ public class MainWindowViewModel : ViewModelBase
                     }
                     flagNamesTemp.Sort();
                     allFlagNames = flagNamesTemp;
-                    FlagNames = flagNamesTemp.Where(FlagListFilter).ToList();
+                    UpdateFilter();
                 }
             }
         }
     }
 
+    public void UpdateFilter()
+    {
+        FlagNames = allFlagNames.Where(FlagListFilter).ToList();
+    }
+
     private bool FlagListFilter(string name)
     {
         // Mask, obtain confidence bit by right-shifting by confidence (ignoring possibility of Unknown) AND 1
-        return Convert.ToBoolean((filterMask >> ((int)generator.flagConfidence[name] - 1)) & 1) &&
+        return Convert.ToBoolean((filterMask >> (int)generator.flagConfidence[name]) & 1) &&
         // Mask, obtain confirmed bit by right-shifting by confirmed status (Plus 4 to bypass confidence bits) AND 1
-            Convert.ToBoolean((filterMask >> (Convert.ToInt32(confirmeds[name]) + 4)) & 1);
+            Convert.ToBoolean((filterMask >> (Convert.ToInt32(confirmeds[name]) + 5)) & 1);
     }
 
     private void SetConfirmText(bool confirm)
@@ -468,15 +483,19 @@ public class MainWindowViewModel : ViewModelBase
         {
             confirmed = force ?? !confirmed;
             BgColors[flag.DataName].Color = GetBackgroundColor(confirmed).Color;
+            confirmeds[flag.DataName] = confirmed;
             SetConfirmText(confirmed);
             if (confirmed)
             {
                 generator.mgr.Replace(flag);
+                FlagCache.Apply(flag);
             }
+            UpdateFilter();
             return true;
         }
         BgColors[flag.DataName].Color = GetBackgroundColor(false).Color;
         SetConfirmText(false);
+        UpdateFilter();
         return false;
     }
 

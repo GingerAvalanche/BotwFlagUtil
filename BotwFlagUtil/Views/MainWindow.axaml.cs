@@ -10,6 +10,7 @@ using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using SharpYaml.Tokens;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -33,6 +34,14 @@ public partial class MainWindow : Window
 
         //FlagSelector.DataTemplates.Add(new FlagNameDataTemplate(vm));
         FlagSelector.ItemTemplate = new FlagNameDataTemplate(vm);
+
+        // Filters
+        Blue.Click += Filter_Click;
+        Green.Click += Filter_Click;
+        Yellow.Click += Filter_Click;
+        Red.Click += Filter_Click;
+        Manual.Click += Filter_Click;
+        Automatic.Click += Filter_Click;
 
         About.Click += About_Click;
         Exit.Click += Exit_Click;
@@ -60,6 +69,34 @@ public partial class MainWindow : Window
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 }).ShowWindowDialogAsync(this);
         }
+    }
+
+    private void Filter_Click(object? sender, RoutedEventArgs e)
+    {
+        MainWindowViewModel vm = (MainWindowViewModel)DataContext!;
+        MenuItem item = (MenuItem)sender!;
+        switch (item.Name)
+        {
+            case "Blue":
+                vm.FilterBlue = item.IsChecked;
+                break;
+            case "Green":
+                vm.FilterGreen = item.IsChecked;
+                break;
+            case "Yellow":
+                vm.FilterYellow = item.IsChecked;
+                break;
+            case "Red":
+                vm.FilterRed = item.IsChecked;
+                break;
+            case "Manual":
+                vm.FilterMan = item.IsChecked;
+                break;
+            case "Automatic":
+                vm.FilterAuto = item.IsChecked;
+                break;
+        }
+        vm.UpdateFilter();
     }
 
     private async void About_Click(object? sender, RoutedEventArgs e)
