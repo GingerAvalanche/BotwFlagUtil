@@ -3,16 +3,16 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace BotwFlagUtil.Models.Cache
 {
-    [ProtoContract]
     internal class FlagCache
     {
-        [ProtoMember(1)]
-        private static Dictionary<NintendoHash, FlagDiff> cache = [];
+        private static readonly string cache_folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "botw_tools", "cache");
+        private static Dictionary<uint, FlagDiff> cache = [];
         private static bool initialized = false;
-        private static string modName = string.Empty;
+        private static string cacheName = string.Empty;
         private static readonly Dictionary<NintendoHash, Flag> orig = [];
 
         internal static void Init(string modName_, FlagMgr mgr)
@@ -25,10 +25,19 @@ namespace BotwFlagUtil.Models.Cache
             {
                 orig[flag.HashValue] = flag;
             }
-            modName = modName_;
-            using (FileStream stream = File.OpenRead(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "botw_tools", $"{modName}.cache")))
+            cacheName = $"{modName_}_flag.cache";
+            if (!Directory.Exists(cache_folder))
             {
-                cache = Serializer.Deserialize<Dictionary<NintendoHash, FlagDiff>>(stream);
+                Directory.CreateDirectory(cache_folder);
+            }
+            else
+            {
+                string cache_path = Path.Combine(cache_folder, cacheName);
+                if (File.Exists(cache_path))
+                {
+                    using FileStream stream = File.OpenRead(cache_path);
+                    cache = Serializer.Deserialize<Dictionary<uint, FlagDiff>>(stream);
+                }
             }
             initialized = true;
         }
@@ -39,22 +48,26 @@ namespace BotwFlagUtil.Models.Cache
             {
                 throw new InvalidOperationException("FlagCache not initialized!");
             }
-            cache[new_.HashValue] = new FlagDiff(new_, orig[new_.HashValue]);
-            using FileStream stream = File.OpenWrite(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "botw_tools", $"{modName}.cache"));
+            FlagDiff diff = new(new_, orig[new_.HashValue]);
+            if (!diff.IsEmpty())
+            {
+                cache[new_.HashValue.uvalue] = diff;
+            }
+            else
+            {
+                cache.Remove(new_.HashValue.uvalue);
+            }
+            using FileStream stream = File.OpenWrite(Path.Combine(cache_folder, cacheName));
             Serializer.Serialize(stream, cache);
         }
 
-        internal static void Recall(ref Flag flag)
+        internal static IEnumerable<Flag> RecallAll()
         {
             if (!initialized)
             {
                 throw new InvalidOperationException("FlagCache not initialized!");
             }
-            if (cache.TryGetValue(flag.HashValue, out FlagDiff? diff) &&
-                orig.TryGetValue(flag.HashValue, out Flag origFlag))
-            {
-                flag = diff.Apply(origFlag);
-            }
+            return cache.Where(kvp => orig.ContainsKey(kvp.Key)).Select(kvp => kvp.Value.Apply(orig[kvp.Key]));
         }
     }
 }

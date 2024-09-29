@@ -4,18 +4,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Aamp.Security.Cryptography;
 using BymlLibrary;
-using ProtoBuf;
 
 namespace BotwFlagUtil
 {
-    [ProtoContract]
     [JsonConverter(typeof(NintendoHashConverter))]
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct NintendoHash : IEquatable<NintendoHash>
     {
         [FieldOffset(0)]
         public int ivalue;
-        [ProtoMember(1)]
         [FieldOffset(0)]
         public uint uvalue;
 

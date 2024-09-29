@@ -8,23 +8,25 @@ namespace BotwFlagUtil.Models.Cache
     internal class FlagDiff
     {
         [ProtoMember(1)]
-        public string? InitValue { get; set; }
+        private string? InitValue { get; set; }
         [ProtoMember(2)]
-        public bool? IsEventAssociated { get; set; }
+        private bool? IsEventAssociated { get; set; }
         [ProtoMember(3)]
-        public bool? IsOneTrigger { get; set; }
+        private bool? IsOneTrigger { get; set; }
         [ProtoMember(4)]
-        public bool? IsProgramReadable { get; set; }
+        private bool? IsProgramReadable { get; set; }
         [ProtoMember(5)]
-        public bool? IsProgramWritable { get; set; }
+        private bool? IsProgramWritable { get; set; }
         [ProtoMember(6)]
-        public bool? IsSave { get; set; }
+        private bool? IsSave { get; set; }
         [ProtoMember(7)]
-        public string? MaxValue { get; set; }
+        private string? MaxValue { get; set; }
         [ProtoMember(8)]
-        public string? MinValue { get; set; }
+        private string? MinValue { get; set; }
         [ProtoMember(9)]
-        public int? ResetType { get; set; }
+        private int? ResetType { get; set; }
+
+        public FlagDiff() { }
 
         public FlagDiff(Flag mod, Flag orig)
         {
@@ -106,6 +108,19 @@ namespace BotwFlagUtil.Models.Cache
                 newFlag.ResetType = ResetType.Value;
             }
             return newFlag;
+        }
+
+        public bool IsEmpty()
+        {
+            return InitValue == null &&
+                !IsEventAssociated.HasValue &&
+                !IsOneTrigger.HasValue &&
+                !IsProgramReadable.HasValue &&
+                !IsProgramWritable.HasValue &&
+                !IsSave.HasValue &&
+                MaxValue == null &&
+                MinValue == null &&
+                !ResetType.HasValue;
         }
     }
 }
