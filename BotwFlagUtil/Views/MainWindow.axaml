@@ -72,7 +72,7 @@
                ItemsSource="{Binding FlagNames}"
                Name="FlagSelector"
                Selection="{Binding FlagNameSelection}"
-               SelectionMode="Single,AlwaysSelected">
+               SelectionMode="Single">
         <ListBox.Styles>
           <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0"/>

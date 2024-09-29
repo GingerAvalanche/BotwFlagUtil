@@ -137,7 +137,7 @@ public class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref initValue, value);
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
             try {
                 FlagUnion initVal = FlagUnion.FromString(InitValueType, value);
                 flag.InitValue = initVal;
@@ -168,7 +168,7 @@ public class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref maxValue, value);
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
             try {
                 FlagUnion maxVal = FlagUnion.FromString(BoundingValueType, value);
                 flag.MaxValue = maxVal;
@@ -190,7 +190,7 @@ public class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref minValue, value);
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
             try {
                 FlagUnion minVal = FlagUnion.FromString(BoundingValueType, value);
                 flag.MinValue = minVal;
@@ -213,7 +213,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.IsEventAssociated = value;
             this.RaisePropertyChanged(nameof(IsEventAssociated));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public bool IsOneTrigger
@@ -223,7 +223,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.IsOneTrigger = value;
             this.RaisePropertyChanged(nameof(IsOneTrigger));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public bool IsProgramReadable
@@ -233,7 +233,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.IsProgramReadable = value;
             this.RaisePropertyChanged(nameof(IsProgramReadable));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public bool IsProgramWritable
@@ -243,7 +243,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.IsProgramWritable = value;
             this.RaisePropertyChanged(nameof(IsProgramWritable));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public bool IsSave
@@ -253,7 +253,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.IsSave = value;
             this.RaisePropertyChanged(nameof(IsSave));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public static string[] ResetTypes
@@ -273,7 +273,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             flag.ResetType = value;
             this.RaisePropertyChanged(nameof(ResetType));
-            Confirm(false);
+            ConfirmHelper_UpdateUINoFilter(false);
         }
     }
     public bool CanConfirm
@@ -472,31 +472,42 @@ public class MainWindowViewModel : ViewModelBase
             Convert.ToBoolean((filterMask >> (Convert.ToInt32(confirmeds[name]) + 5)) & 1);
     }
 
+    public bool Confirm(bool? force = null)
+    {
+        if (CanConfirm)
+        {
+            // Can't simply toggle confirmed because the UI will desync with it
+            // so check what the UI says
+            confirmed = force ?? confirmText == "Confirmed \u2610";
+            ConfirmHelper_UpdateUINoFilter(confirmed);
+            ConfirmHelper_CommitChange();
+            UpdateFilter();
+            return true;
+        }
+        ConfirmHelper_UpdateUINoFilter(false);
+        UpdateFilter();
+        return false;
+    }
+
+    private void ConfirmHelper_UpdateUINoFilter(bool confirmed)
+    {
+        BgColors[flag.DataName].Color = GetBackgroundColor(confirmed).Color;
+        SetConfirmText(confirmed);
+    }
+
     private void SetConfirmText(bool confirm)
     {
         ConfirmText = confirm ? "Confirmed \u2611" : "Confirmed \u2610";
     }
 
-    public bool Confirm(bool? force = null)
+    private void ConfirmHelper_CommitChange()
     {
-        if (CanConfirm)
+        confirmeds[flag.DataName] = confirmed;
+        if (confirmed)
         {
-            confirmed = force ?? !confirmed;
-            BgColors[flag.DataName].Color = GetBackgroundColor(confirmed).Color;
-            confirmeds[flag.DataName] = confirmed;
-            SetConfirmText(confirmed);
-            if (confirmed)
-            {
-                generator.mgr.Replace(flag);
-                FlagCache.Apply(flag);
-            }
-            UpdateFilter();
-            return true;
+            generator.mgr.Replace(flag);
+            FlagCache.Apply(flag);
         }
-        BgColors[flag.DataName].Color = GetBackgroundColor(false).Color;
-        SetConfirmText(false);
-        UpdateFilter();
-        return false;
     }
 
     public void Save()
