@@ -5,7 +5,7 @@ using BotwFlagUtil.Views;
 
 namespace BotwFlagUtil;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {

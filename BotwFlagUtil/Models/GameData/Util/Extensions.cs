@@ -1,8 +1,9 @@
 ﻿using System.Linq;
+using BotwFlagUtil.GameData.Util;
 using BymlLibrary;
 using BymlLibrary.Nodes.Containers;
 
-namespace BotwFlagUtil.GameData.Util
+namespace BotwFlagUtil.Models.GameData.Util
 {
     internal static class Extensions
     {

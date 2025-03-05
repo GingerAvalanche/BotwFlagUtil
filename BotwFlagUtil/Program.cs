@@ -5,7 +5,7 @@ using System.IO;
 
 namespace BotwFlagUtil;
 
-sealed class Program
+internal static class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -22,7 +22,7 @@ sealed class Program
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
+    private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()

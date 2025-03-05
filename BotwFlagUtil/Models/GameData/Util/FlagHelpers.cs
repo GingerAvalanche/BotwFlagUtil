@@ -1,22 +1,22 @@
-﻿using BymlLibrary;
-using BymlLibrary.Nodes.Containers;
-using Revrs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BymlLibrary;
+using BymlLibrary.Nodes.Containers;
+using Revrs;
 
-namespace BotwFlagUtil.GameData.Util
+namespace BotwFlagUtil.Models.GameData.Util
 {
-    internal class FlagHelpers
+    internal abstract class FlagHelpers
     {
-        public static JsonSerializerOptions floatOptions = new()
+        public static readonly JsonSerializerOptions FloatOptions = new()
         {
             Converters = { new FloatConverter() },
             WriteIndented = true,
             NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
         };
-        public static JsonSerializerOptions floatListOptions = new()
+        public static readonly JsonSerializerOptions FloatListOptions = new()
         {
             Converters = { new FloatListConverter() },
             WriteIndented = true,
@@ -112,7 +112,7 @@ namespace BotwFlagUtil.GameData.Util
                     { "file_list", new BymlArray([GameDataHeader, flags]) },
                     { "save_info", MakeSaveInfoFooter(numFiles) }
                 }
-            ).ToBinary(endianness, 2);
+            ).ToBinary(endianness);
         }
 
         public static ReadOnlyMemory<byte> MakeCaptionSaveFormatFile(BymlArray flags, int numFiles, Endianness endianness)
@@ -123,7 +123,7 @@ namespace BotwFlagUtil.GameData.Util
                     { "file_list", new BymlArray([CaptionHeader, flags]) },
                     { "save_info", MakeSaveInfoFooter(numFiles) }
                 }
-            ).ToBinary(endianness, 2);
+            ).ToBinary(endianness);
         }
 
         public static ReadOnlyMemory<byte> MakeOptionSaveFormatFile(BymlArray flags, int numFiles, Endianness endianness)
@@ -134,7 +134,7 @@ namespace BotwFlagUtil.GameData.Util
                     { "file_list", new BymlArray([OptionHeader, flags]) },
                     { "save_info", MakeSaveInfoFooter(numFiles) }
                 }
-            ).ToBinary(endianness, 2);
+            ).ToBinary(endianness);
         }
 
         private static Byml MakeSaveInfoFooter(int numFiles)

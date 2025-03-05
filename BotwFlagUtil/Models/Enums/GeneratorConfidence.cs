@@ -1,4 +1,4 @@
-namespace BotwFlagUtil.Enums
+namespace BotwFlagUtil.Models.Enums
 {
     public enum GeneratorConfidence
     {

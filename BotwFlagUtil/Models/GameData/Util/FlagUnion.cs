@@ -1,14 +1,15 @@
-﻿using BymlLibrary;
-using BymlLibrary.Nodes.Containers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BotwFlagUtil.GameData.Util;
+using BymlLibrary;
+using BymlLibrary.Nodes.Containers;
 
-namespace BotwFlagUtil.GameData.Util
+namespace BotwFlagUtil.Models.GameData.Util
 {
     public enum FlagUnionType : ushort
     {
@@ -61,7 +62,7 @@ namespace BotwFlagUtil.GameData.Util
         [FieldOffset(4)]
         public Vec4? vec4Value;
 
-        public FlagUnion(FlagUnionType t)
+        private FlagUnion(FlagUnionType t)
         {
             if (t > FlagUnionType.Vec4)
             {
@@ -114,98 +115,98 @@ namespace BotwFlagUtil.GameData.Util
         }
         public static implicit operator FlagUnion(FlagUnionType t) => new(t);
 
-        public FlagUnion(bool v)
+        private FlagUnion(bool v)
         {
             Type = FlagUnionType.Bool;
             boolValue = v;
         }
         public static implicit operator FlagUnion(bool v) => new(v);
 
-        public FlagUnion(List<bool> v)
+        private FlagUnion(List<bool> v)
         {
             Type = FlagUnionType.BoolArray;
             boolArrayValue = v;
         }
         public static implicit operator FlagUnion(List<bool> v) => new(v);
 
-        public FlagUnion(float v)
+        private FlagUnion(float v)
         {
             Type = FlagUnionType.F32;
             f32Value = v;
         }
         public static implicit operator FlagUnion(float v) => new(v);
 
-        public FlagUnion(List<float> v)
+        private FlagUnion(List<float> v)
         {
             Type = FlagUnionType.F32Array;
             f32ArrayValue = v;
         }
         public static implicit operator FlagUnion(List<float> v) => new(v);
 
-        public FlagUnion(int v)
+        private FlagUnion(int v)
         {
             Type = FlagUnionType.S32;
             s32Value = v;
         }
         public static implicit operator FlagUnion(int v) => new(v);
 
-        public FlagUnion(List<int> v)
+        private FlagUnion(List<int> v)
         {
             Type = FlagUnionType.S32Array;
             s32ArrayValue = v;
         }
         public static implicit operator FlagUnion(List<int> v) => new(v);
 
-        public FlagUnion(string v)
+        private FlagUnion(string v)
         {
             Type = FlagUnionType.String;
             stringValue = v;
         }
         public static implicit operator FlagUnion(string v) => new(v);
 
-        public FlagUnion(List<string> v)
+        private FlagUnion(List<string> v)
         {
             Type = FlagUnionType.StringArray;
             stringArrayValue = v;
         }
         public static implicit operator FlagUnion(List<string> v) => new(v);
 
-        public FlagUnion(Vec2 v)
+        private FlagUnion(Vec2 v)
         {
             Type = FlagUnionType.Vec2;
             vec2Value = v;
         }
         public static implicit operator FlagUnion(Vec2 v) => new(v);
 
-        public FlagUnion(List<Vec2> v)
+        private FlagUnion(List<Vec2> v)
         {
             Type = FlagUnionType.Vec2Array;
             vec2ArrayValue = v;
         }
         public static implicit operator FlagUnion(List<Vec2> v) => new(v);
 
-        public FlagUnion(Vec3 v)
+        private FlagUnion(Vec3 v)
         {
             Type = FlagUnionType.Vec3;
             vec3Value = v;
         }
         public static implicit operator FlagUnion(Vec3 v) => new(v);
 
-        public FlagUnion(List<Vec3> v)
+        private FlagUnion(List<Vec3> v)
         {
             Type = FlagUnionType.Vec3Array;
             vec3ArrayValue = v;
         }
         public static implicit operator FlagUnion(List<Vec3> v) => new(v);
 
-        public FlagUnion(Vec4 v)
+        private FlagUnion(Vec4 v)
         {
             Type = FlagUnionType.Vec4;
             vec4Value = v;
         }
         public static implicit operator FlagUnion(Vec4 v) => new(v);
 
-        public FlagUnion(List<float[]> v)
+        private FlagUnion(List<float[]> v)
         {
             if (v.All(l => l.Length == 2))
             {
@@ -224,18 +225,18 @@ namespace BotwFlagUtil.GameData.Util
         }
         public static implicit operator FlagUnion(List<float[]> v) => new(v);
 
-        public FlagUnion(List<FlagUnion> flags)
+        private FlagUnion(List<FlagUnion> flags)
         {
             FlagUnionType firstType = flags[0].Type;
             if (firstType == FlagUnionType.Vec4)
             {
                 throw new ArgumentException($"{firstType + 1} is not a Container type", nameof(flags));
             }
-            if (!flags.All(f => f.Type == firstType))
+            if (flags.Any(f => f.Type != firstType))
             {
                 throw new ArgumentException($"Not all flag types match {firstType}", nameof(flags));
             }
-            Type = Helpers.singleTypeToArrayType[firstType];
+            Type = Helpers.SingleTypeToArrayType[firstType];
 
             switch (Type)
             {
@@ -278,7 +279,7 @@ namespace BotwFlagUtil.GameData.Util
         public static bool operator ==(FlagUnion lhs, FlagUnion rhs) => lhs.Equals(rhs);
         public static bool operator !=(FlagUnion lhs, FlagUnion rhs) => !lhs.Equals(rhs);
 
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (obj is FlagUnion flag) return Equals(flag);
             return false;
@@ -338,7 +339,7 @@ namespace BotwFlagUtil.GameData.Util
             };
         }
 
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return Type switch
             {
@@ -359,7 +360,7 @@ namespace BotwFlagUtil.GameData.Util
             };
         }
 
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return Type switch
             {
@@ -490,7 +491,7 @@ namespace BotwFlagUtil.GameData.Util
                 return false;
             }
 
-            public static bool TryReadString(ref Utf8JsonReader reader, [NotNullWhen(true)] out FlagUnion? value)
+            private static bool TryReadString(ref Utf8JsonReader reader, [NotNullWhen(true)] out FlagUnion? value)
             {
                 if (reader.TokenType == JsonTokenType.String)
                 {
@@ -505,7 +506,7 @@ namespace BotwFlagUtil.GameData.Util
                 return false;
             }
 
-            public static bool TryReadVec(ref Utf8JsonReader reader, [NotNullWhen(true)] out FlagUnion? value)
+            private static bool TryReadVec(ref Utf8JsonReader reader, [NotNullWhen(true)] out FlagUnion? value)
             {
                 float[] result = new float[4];
                 int highest = 0;
@@ -522,11 +523,12 @@ namespace BotwFlagUtil.GameData.Util
                         };
                         return value.HasValue;
                     }
-                    float v;
+
                     if (reader.TokenType == JsonTokenType.PropertyName)
                     {
                         string propertyName = reader.GetString()!;
                         reader.Read();
+                        float v;
                         switch (propertyName)
                         {
                             case "X":
@@ -553,7 +555,7 @@ namespace BotwFlagUtil.GameData.Util
                                 if (reader.TryGetSingle(out v))
                                 {
                                     result[3] = v;
-                                    highest = highest > 3 ? highest : 3;
+                                    highest = 3;
                                 }
                                 break;
                         }
@@ -627,10 +629,10 @@ namespace BotwFlagUtil.GameData.Util
                         JsonSerializer.Serialize(writer, value.boolArrayValue!);
                         break;
                     case FlagUnionType.F32:
-                        JsonSerializer.Serialize(writer, value.f32Value!.Value, FlagHelpers.floatOptions);
+                        JsonSerializer.Serialize(writer, value.f32Value!.Value, FlagHelpers.FloatOptions);
                         break;
                     case FlagUnionType.F32Array:
-                        JsonSerializer.Serialize(writer, value.f32ArrayValue!, FlagHelpers.floatListOptions);
+                        JsonSerializer.Serialize(writer, value.f32ArrayValue!, FlagHelpers.FloatListOptions);
                         break;
                     case FlagUnionType.S32:
                         JsonSerializer.Serialize(writer, value.s32Value!.Value);

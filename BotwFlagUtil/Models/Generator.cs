@@ -6,10 +6,11 @@ using System.Text;
 using Aamp.Security.Cryptography;
 using BfevLibrary;
 using BfevLibrary.Core;
-using BotwFlagUtil.Enums;
-using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
 using BotwFlagUtil.Models.Enums;
+using BotwFlagUtil.Models.GameData;
+using BotwFlagUtil.Models.GameData.Util;
+using BotwFlagUtil.Models.Structs;
 using BymlLibrary;
 using BymlLibrary.Nodes.Immutable.Containers;
 using CsYaz0;
@@ -17,23 +18,23 @@ using Nintendo.Aamp;
 using Revrs;
 using SarcLibrary;
 
-namespace BotwFlagUtil
+namespace BotwFlagUtil.Models
 {
     public class Generator
     {
-        public FlagMgr mgr;
-        public Dictionary<NintendoHash, GeneratorConfidence> flagConfidence;
-        private readonly HashSet<NintendoHash> orphanedFlagHashes;
-        private readonly HashSet<Flag> flagsToAdd;
-        private readonly Dictionary<string, RevivalTag> actorRevivalTypes;
-        private static readonly string[] linkTagFlagNames =
+        public FlagMgr Mgr = new();
+        public Dictionary<NintendoHash, GeneratorConfidence> FlagConfidence = [];
+        private readonly HashSet<NintendoHash> orphanedFlagHashes = [];
+        private readonly HashSet<Flag> flagsToAdd = new(new HashValueComparer());
+        private readonly Dictionary<string, RevivalTag> actorRevivalTypes = [];
+        private static readonly string[] LinkTagFlagNames =
         [
             "{0}",
             "Clear_{0}",
             "Open_{0}",
             "{0}_{1}_{2}"
         ];
-        private static readonly HashSet<uint> revivalTags =
+        private static readonly HashSet<uint> RevivalTags =
         [
             0xb0c9e79a, // RevivalBloodyMoon
             0xdeb2c8bd, // RevivalNone
@@ -43,21 +44,21 @@ namespace BotwFlagUtil
             0x25cd2b4d, // RevivalRandomForDrop
             0x09e9e131, // RevivalUnderGodTime
         ];
-        private static readonly HashSet<string> noZukanFlagActors =
+        private static readonly HashSet<string> NoZukanFlagActors =
         [
             "DgnObj_DLC_Weapon_Sword_502",
             "Priest_Boss_Giant",
             "Priest_Boss_Normal",
             "Priest_Boss_ShadowClone_Real",
         ];
-        private static readonly HashSet<string> noShopFlagActors =
+        private static readonly HashSet<string> NoShopFlagActors =
         [
             "Npc_DressFairy_00",
             "Npc_DressFairy_01",
             "Npc_DressFairy_02",
             "Npc_DressFairy_03",
         ];
-        private static readonly Dictionary<NintendoHash, FlagCategory> zukanCategoryMap = new()
+        private static readonly Dictionary<NintendoHash, FlagCategory> ZukanCategoryMap = new()
         {
             { 0x24CD75FE, FlagCategory.Animal },
             { 0x2755F107, FlagCategory.Weapon },
@@ -66,7 +67,7 @@ namespace BotwFlagUtil
             { 0x994AEF4B, FlagCategory.Enemy },
             { 0xBB8D80C2, FlagCategory.Other },
         };
-        private static readonly HashSet<string> armorProfiles =
+        private static readonly HashSet<string> ArmorProfiles =
         [
             "ArmorHead",
             "ArmorUpper",
@@ -76,18 +77,9 @@ namespace BotwFlagUtil
             //"ArmorExtra2",
         ];
 
-        public Generator()
-        {
-            mgr = new();
-            flagConfidence = [];
-            orphanedFlagHashes = [];
-            flagsToAdd = new(new HashValueComparer());
-            actorRevivalTypes = [];
-        }
-
         public void GenerateActorFlags()
         {
-            if (Helpers.RootDir == null)
+            if (Helpers.rootDir == null)
             {
                 throw new InvalidOperationException("Evaluating maps before setting root directory!");
             }
@@ -113,7 +105,7 @@ namespace BotwFlagUtil
                 if (map.TryGetValue(keyTable, "profile", out ImmutableByml profileNode))
                 {
                     string profile = profileNode.GetString(stringTable);
-                    if (armorProfiles.Contains(profile))
+                    if (ArmorProfiles.Contains(profile))
                     {
                         map.TryGetValue(keyTable, "armorStarNum", out ImmutableByml starNum);
                         if (starNum.GetInt() > 1)
@@ -143,8 +135,8 @@ namespace BotwFlagUtil
                             }
                         }
                         NintendoHash entryValue = entry.Node;
-                        if (zukanCategoryMap.TryGetValue(entryValue, out FlagCategory category) &&
-                            !noZukanFlagActors.Contains(actorName))
+                        if (ZukanCategoryMap.TryGetValue(entryValue, out FlagCategory category) &&
+                            !NoZukanFlagActors.Contains(actorName))
                         {
                             StageFlag(new(
                                 $"IsNewPictureBook_{flagActorName}",
@@ -205,7 +197,7 @@ namespace BotwFlagUtil
                             }, GeneratorConfidence.Definite);
                         }
 
-                        if (revivalTags.Contains(entryValue.uvalue))
+                        if (RevivalTags.Contains(entryValue.uvalue))
                         {
                             if (entryValue.uvalue == 0xB0C9E79A) // RevivalBloodyMoon
                             {
@@ -230,7 +222,7 @@ namespace BotwFlagUtil
 
             foreach (string actorName in npcsToCheck)
             {
-                if (noShopFlagActors.Contains(actorName))
+                if (NoShopFlagActors.Contains(actorName))
                 {
                     continue; // Ignore DressFairies, their inventory is fake
                 }
@@ -288,7 +280,6 @@ namespace BotwFlagUtil
 
         public void GenerateEventFlags()
         {
-            string? flagName;
             // TODO: Handle event packs in titlebg (and bootup?)
             string path = Helpers.GetFullModPath("Event");
             if (path == string.Empty)
@@ -307,24 +298,22 @@ namespace BotwFlagUtil
                     if (Encoding.UTF8.GetString(file.Data[..8]) == "BFEVFL\0\0")
                     {
                         BfevFile evfl = BfevFile.FromBinary(file.Data.ToArray());
-                        Dictionary<int, string> idxToActorMap = [];
-                        Dictionary<string, Dictionary<int, string>> actorToIdxToActionMap = [];
-                        Dictionary<string, Dictionary<int, string>> actorToIdxToQueryMap = [];
                         if (evfl.Flowchart != null)
                         {
                             foreach (Event e in evfl.Flowchart.Events)
                             {
+                                string? flagName;
                                 if (e is ActionEvent action)
                                 {
-                                    if (action.ActorAction != null && action.Parameters != null &&
-                                        Helpers.actionParams.TryGetValue(
+                                    if (action is { ActorAction: not null, Parameters: not null } &&
+                                        Helpers.ActionParams.TryGetValue(
                                             action.ActorAction, out HashSet<string>? actionFlags
                                         )
                                     )
                                     {
                                         foreach (string actionFlag in actionFlags)
                                         {
-                                            if (Helpers.boolFlags.Contains(actionFlag))
+                                            if (Helpers.BoolFlags.Contains(actionFlag))
                                             {
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
@@ -344,7 +333,7 @@ namespace BotwFlagUtil
                                                     StageFlag(flag, confidence);
                                                 }
                                             }
-                                            else if (Helpers.floatFlags.Contains(actionFlag))
+                                            else if (Helpers.FloatFlags.Contains(actionFlag))
                                             {
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
@@ -353,7 +342,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.intFlags.Contains(actionFlag))
+                                            else if (Helpers.IntFlags.Contains(actionFlag))
                                             {
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
@@ -365,7 +354,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.stringFlags.Contains(actionFlag))
+                                            else if (Helpers.StringFlags.Contains(actionFlag))
                                             {
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
@@ -374,7 +363,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.vec3Flags.Contains(actionFlag))
+                                            else if (Helpers.Vec3Flags.Contains(actionFlag))
                                             {
                                                 flagName = action.Parameters[actionFlag].String;
                                                 if (flagName != null)
@@ -388,15 +377,15 @@ namespace BotwFlagUtil
                                 }
                                 else if (e is SwitchEvent @switch)
                                 {
-                                    if (@switch.ActorQuery != null && @switch.Parameters != null &&
-                                        Helpers.queryParams.TryGetValue(
+                                    if (@switch is { ActorQuery: not null, Parameters: not null } &&
+                                        Helpers.QueryParams.TryGetValue(
                                             @switch.ActorQuery, out HashSet<string>? queryFlags
                                         )
                                     )
                                     {
                                         foreach (string queryFlag in queryFlags)
                                         {
-                                            if (Helpers.boolFlags.Contains(queryFlag))
+                                            if (Helpers.BoolFlags.Contains(queryFlag))
                                             {
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
@@ -416,7 +405,7 @@ namespace BotwFlagUtil
                                                     StageFlag(flag, confidence);
                                                 }
                                             }
-                                            else if (Helpers.floatFlags.Contains(queryFlag))
+                                            else if (Helpers.FloatFlags.Contains(queryFlag))
                                             {
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
@@ -425,7 +414,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.intFlags.Contains(queryFlag))
+                                            else if (Helpers.IntFlags.Contains(queryFlag))
                                             {
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
@@ -437,7 +426,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.stringFlags.Contains(queryFlag))
+                                            else if (Helpers.StringFlags.Contains(queryFlag))
                                             {
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
@@ -446,7 +435,7 @@ namespace BotwFlagUtil
                                                         GeneratorConfidence.Bad);
                                                 }
                                             }
-                                            else if (Helpers.vec3Flags.Contains(queryFlag))
+                                            else if (Helpers.Vec3Flags.Contains(queryFlag))
                                             {
                                                 flagName = @switch.Parameters[queryFlag].String;
                                                 if (flagName != null)
@@ -476,6 +465,7 @@ namespace BotwFlagUtil
         /// <param name="mapName">The name of the mubin file, without extension, _Static,
         /// or _Dynamic</param>
         /// <param name="value">The Flag that is generated</param>
+        /// <param name="confidence">The GeneratorConfidence of value</param>
         /// <returns>False if the flag should not be made, or true if it should</returns>
         /// <exception cref="InvalidDataException">Thrown under 2 conditions:<br />
         /// - byml is a LinkTag with MakeSaveFlag 1 and mapType is MapType.MainField<br />
@@ -489,8 +479,7 @@ namespace BotwFlagUtil
             MapType mapType,
             string mapName,
             out Flag value,
-            out GeneratorConfidence confidence
-        )
+            out GeneratorConfidence confidence)
         {
             if (mapType == MapType.AocField)
             {
@@ -538,11 +527,11 @@ namespace BotwFlagUtil
                                 3 => [mapType.ToString(), actorName, hashId.ToString()],
                                 _ => throw new NotImplementedException(),
                             };
-                            flagName = string.Format(linkTagFlagNames[makeSaveFlag], parts);
+                            flagName = string.Format(LinkTagFlagNames[makeSaveFlag], parts);
                         }
                         else if (paramsMap.TryGetValue(
-                            keyTable, "SaveFlag", out ImmutableByml linkSaveFlag
-                        ))
+                                     keyTable, "SaveFlag", out ImmutableByml linkSaveFlag
+                                 ))
                         {
                             flagName = linkSaveFlag.GetString(stringTable);
                         }
@@ -551,14 +540,8 @@ namespace BotwFlagUtil
                             goto shouldNotMakeFlag;
                         }
 
-                        bool s32 = false;
-                        if (paramsMap.TryGetValue(
-                                keyTable, "IncrementSave", out ImmutableByml linkIncrement
-                            ) &&
-                            linkIncrement.GetBool())
-                        {
-                            s32 = true;
-                        }
+                        bool s32 = paramsMap.TryGetValue(keyTable, "IncrementSave", out ImmutableByml linkIncrement) &&
+                                   linkIncrement.GetBool();
 
                         value = new(
                             flagName,
@@ -638,7 +621,7 @@ namespace BotwFlagUtil
                     return true;
                 }
             }
-        shouldNotMakeFlag:
+            shouldNotMakeFlag:
             value = Flag.GetTempFlag($"{mapType}_{actorName}_{hashId}");
             confidence = 0;
             return false;
@@ -988,8 +971,8 @@ namespace BotwFlagUtil
 
         public void ReplaceManager(FlagMgr mgr)
         {
-            this.mgr = mgr;
-            flagConfidence = mgr.GetAllFlags()
+            this.Mgr = mgr;
+            FlagConfidence = mgr.GetAllFlags()
                 .Select(f => (f.HashValue, GeneratorConfidence.Definite))
                 .ToDictionary();
         }
@@ -998,7 +981,7 @@ namespace BotwFlagUtil
         {
             if (flagsToAdd.Add(flag))
             {
-                flagConfidence[flag.HashValue] = confidence;
+                FlagConfidence[flag.HashValue] = confidence;
             }
         }
 
@@ -1006,13 +989,13 @@ namespace BotwFlagUtil
         {
             foreach (Flag flag in flagsToAdd)
             {
-                if (Helpers.vanillaFlagHashes.Contains(flag.HashValue))
+                if (Helpers.VanillaFlagHashes.Contains(flag.HashValue))
                 {
-                    flagConfidence.Remove(flag.HashValue);
+                    FlagConfidence.Remove(flag.HashValue);
                 }
                 else
                 {
-                    mgr.Add(flag);
+                    Mgr.Add(flag);
                 }
             }
             flagsToAdd.Clear();

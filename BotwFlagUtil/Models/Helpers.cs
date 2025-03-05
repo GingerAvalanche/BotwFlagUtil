@@ -1,9 +1,3 @@
-using BotwFlagUtil.GameData;
-using BotwFlagUtil.GameData.Util;
-using BymlLibrary;
-using BymlLibrary.Nodes.Immutable.Containers;
-using CsYaz0;
-using Revrs;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,30 +6,38 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models.GameData;
+using BotwFlagUtil.Models.GameData.Util;
+using BotwFlagUtil.Models.Structs;
+using BymlLibrary;
+using BymlLibrary.Nodes.Immutable.Containers;
+using CsYaz0;
+using Revrs;
 
-namespace BotwFlagUtil
+namespace BotwFlagUtil.Models
 {
     internal static class Helpers
     {
-        public static string? RootDir;
-        private static Endianness? modEndianness;
-        private static Dictionary<string, Vec3>? modShrineLocs;
-        private static Dictionary<string, Vec3>? allShrineLocs;
-        private static HashSet<string>? vanillaLocSaveFlags;
-        private static Dictionary<string, Vec3>? vanillaShrineLocs; 
-        public static readonly Dictionary<string, HashSet<string>> vanillaHasFlags =
+        public static string? rootDir;
+        private static Endianness? _modEndianness;
+        private static Dictionary<string, Vec3>? _modShrineLocs;
+        private static Dictionary<string, Vec3>? _allShrineLocs;
+        private static HashSet<string>? _vanillaLocSaveFlags;
+        private static Dictionary<string, Vec3>? _vanillaShrineLocs; 
+        public static readonly Dictionary<string, HashSet<string>> VanillaHasFlags =
             JsonSerializer.Deserialize<Dictionary<string, HashSet<string>>>(
                 File.ReadAllText(
                     Path.Combine(AppContext.BaseDirectory, "data", "vanilla_actors.json")
                 )
             )!;
-        public static readonly HashSet<NintendoHash> vanillaFlagHashes =
+        public static readonly HashSet<NintendoHash> VanillaFlagHashes =
             JsonSerializer.Deserialize<HashSet<NintendoHash>>(
                 File.ReadAllText(
                     Path.Combine(AppContext.BaseDirectory, "data", "vanilla_hash.json")
                 )
             )!;
-        public static Dictionary<string, FlagUnionType> keyToFlagType = new()
+        public static readonly Dictionary<string, FlagUnionType> KeyToFlagType = new()
         {
             { "bool_data", FlagUnionType.Bool },
             { "bool_array_data", FlagUnionType.BoolArray },
@@ -54,7 +56,7 @@ namespace BotwFlagUtil
             { "vector3f_array_data", FlagUnionType.Vec3Array },
             { "vector4f_data", FlagUnionType.Vec4 },
         };
-        public static Dictionary<FlagUnionType, string> flagTypeToKey = new()
+        public static readonly Dictionary<FlagUnionType, string> FlagTypeToKey = new()
         {
             { FlagUnionType.Bool, "bool_data" },
             { FlagUnionType.BoolArray, "bool_array_data" },
@@ -68,7 +70,7 @@ namespace BotwFlagUtil
             { FlagUnionType.Vec3Array, "vector3f_array_data" },
             { FlagUnionType.Vec4, "vector4f_data" },
         };
-        public static Dictionary<FlagUnionType, FlagUnionType> mainTypeToInitType = new()
+        public static readonly Dictionary<FlagUnionType, FlagUnionType> MainTypeToInitType = new()
         {
             { FlagUnionType.None, FlagUnionType.None },
             { FlagUnionType.Bool, FlagUnionType.S32 },
@@ -85,7 +87,7 @@ namespace BotwFlagUtil
             { FlagUnionType.Vec3Array, FlagUnionType.Vec3Array },
             { FlagUnionType.Vec4, FlagUnionType.Vec4 },
         };
-        public static Dictionary<FlagUnionType, FlagUnionType> mainTypeToMaxOrMinType = new()
+        public static readonly Dictionary<FlagUnionType, FlagUnionType> MainTypeToMaxOrMinType = new()
         {
             { FlagUnionType.None, FlagUnionType.None },
             { FlagUnionType.Bool, FlagUnionType.Bool },
@@ -118,7 +120,7 @@ namespace BotwFlagUtil
             { FlagUnionType.Vec3Array, FlagUnionType.Vec3 },
             { FlagUnionType.Vec4, FlagUnionType.Vec4 },
         };
-        public static Dictionary<FlagUnionType, FlagUnionType> singleTypeToArrayType = new()
+        public static readonly Dictionary<FlagUnionType, FlagUnionType> SingleTypeToArrayType = new()
         {
             { FlagUnionType.Bool, FlagUnionType.BoolArray },
             { FlagUnionType.F32, FlagUnionType.F32Array },
@@ -127,7 +129,8 @@ namespace BotwFlagUtil
             { FlagUnionType.Vec2, FlagUnionType.Vec2Array },
             { FlagUnionType.Vec3, FlagUnionType.Vec3Array },
         };
-        public static Dictionary<FlagUnionType, Dictionary<FlagStringType, string>> flagAndStringTypeToKey = new()
+        public static readonly Dictionary<FlagUnionType, Dictionary<FlagStringType, string>> FlagAndStringTypeToKey =
+            new()
         {
             {
                 FlagUnionType.String,
@@ -147,7 +150,7 @@ namespace BotwFlagUtil
                 }
             },
         };
-        public static Dictionary<string, FlagStringType> keyToStringType = new() {
+        public static readonly Dictionary<string, FlagStringType> KeyToStringType = new() {
             { "bool_data", FlagStringType.None },
             { "bool_array_data", FlagStringType.None },
             { "f32_data", FlagStringType.None },
@@ -165,7 +168,7 @@ namespace BotwFlagUtil
             { "vector3f_array_data", FlagStringType.None },
             { "vector4f_data", FlagStringType.None },
         };
-        public static Dictionary<string, HashSet<string>> actionParams = new() {
+        public static readonly Dictionary<string, HashSet<string>> ActionParams = new() {
             {
                 "Demo_ActorInfoToGameDataVec3",
                 [
@@ -291,7 +294,7 @@ namespace BotwFlagUtil
                 ]
             }
         };
-        public static Dictionary<string, HashSet<string>> queryParams = new() {
+        public static readonly Dictionary<string, HashSet<string>> QueryParams = new() {
             {
                 "CheckFlag",
                 [
@@ -361,10 +364,10 @@ namespace BotwFlagUtil
                 ]
             }
         };
-        public static HashSet<string> boolFlags = [
+        public static readonly HashSet<string> BoolFlags = [
             "FlagName"
         ];
-        public static HashSet<string> floatFlags = [
+        public static readonly HashSet<string> FloatFlags = [
             "GameDataFloatToName",
             "GameDataFloatDstName",
             "GameDataFloatSrcName",
@@ -373,7 +376,7 @@ namespace BotwFlagUtil
             "GameDataFloatName_B",
             "GameDataFloatPlayerDirectionY"
         ];
-        public static HashSet<string> intFlags = [
+        public static readonly HashSet<string> IntFlags = [
             "GameDataIntName",
             "GameDataIntAddValueName",
             "GameDataIntSrcName",
@@ -391,46 +394,45 @@ namespace BotwFlagUtil
             "GameDataIntSecA",
             "GameDataIntSecB"
         ];
-        public static HashSet<string> stringFlags = [
+        public static readonly HashSet<string> StringFlags = [
             "GameDataStringOutput"
         ];
-        public static HashSet<string> vec3Flags = [
+        public static readonly HashSet<string> Vec3Flags = [
             "GameDataVec3fSrcName",
             "GameDataVec3fDstName",
             "GameDataVec3fToName",
             "GameDataVec3fPlayerPos"
         ];
-        public static JsonSerializerOptions jsOpt = new() { WriteIndented = true };
+        public static readonly JsonSerializerOptions JsOpt = new() { WriteIndented = true };
 
         public static Endianness ModEndianness
         {
             get
             {
-                if (!modEndianness.HasValue)
+                if (!_modEndianness.HasValue)
                 {
-                    if (RootDir == null)
+                    if (rootDir == null)
                     {
                         throw new InvalidOperationException(
                             "Attempted to get endianness before rootdir set"
                         );
                     }
-                    modEndianness = Directory.Exists(Path.Combine(RootDir, "content")) ? 
+                    _modEndianness = Directory.Exists(Path.Combine(rootDir, "content")) ? 
                         Endianness.Big : Endianness.Little;
                 }
-                return modEndianness.Value;
+                return _modEndianness.Value;
             }
         }
-        public static Dictionary<string, Vec3> ModShrineLocs
-        {
-            get => modShrineLocs ??= AllShrineLocs.Except(VanillaShrineLocs).ToDictionary();
-        }
-        public static Dictionary<string, Vec3> AllShrineLocs
+        public static Dictionary<string, Vec3> ModShrineLocs =>
+            _modShrineLocs ??= AllShrineLocs.Except(VanillaShrineLocs).ToDictionary();
+
+        private static Dictionary<string, Vec3> AllShrineLocs
         {
             get
             {
-                if (allShrineLocs == null)
+                if (_allShrineLocs == null)
                 {
-                    allShrineLocs = new(VanillaShrineLocs); // Shallow copy, will never edit, only add new
+                    _allShrineLocs = new(VanillaShrineLocs); // Shallow copy, will never edit, only add new
                     string staticPath = GetFullModPath("Map/MainField/Static.smubin");
                     if (staticPath != string.Empty)
                     {
@@ -446,25 +448,25 @@ namespace BotwFlagUtil
                             if (markerMap.TryGetValue(keyTable, "Icon", out ImmutableByml icon) &&
                                 icon.GetString(stringTable) == "Dungeon" &&
                                 markerMap.TryGetValue(keyTable, "MessageID", out ImmutableByml messageId) &&
-                                !allShrineLocs.TryGetValue(messageId.GetString(stringTable), out Vec3 value))
+                                !_allShrineLocs.TryGetValue(messageId.GetString(stringTable), out Vec3 value))
                             {
                                 ImmutableBymlMap vec = markerMap.GetValue(keyTable, "Translate").GetMap();
                                 value.X = vec.GetValue(keyTable, "X").GetFloat();
                                 value.Y = vec.GetValue(keyTable, "Y").GetFloat();
                                 value.Z = vec.GetValue(keyTable, "Z").GetFloat();
-                                allShrineLocs.Add(messageId.GetString(stringTable), value);
+                                _allShrineLocs.Add(messageId.GetString(stringTable), value);
                             }
                         }
                     }
                 }
-                return allShrineLocs;
+                return _allShrineLocs;
             }
         }
         public static HashSet<string> VanillaLocSaveFlags
         {
             get
             {
-                if (vanillaLocSaveFlags == null)
+                if (_vanillaLocSaveFlags == null)
                 {
                     RevrsReader reader = new(
                         Yaz0.Decompress(
@@ -474,7 +476,7 @@ namespace BotwFlagUtil
                     );
                     ImmutableByml stockStatic = new(ref reader);
 
-                    vanillaLocSaveFlags = [];
+                    _vanillaLocSaveFlags = [];
                     ImmutableBymlStringTable keyTable = stockStatic.KeyTable;
                     foreach (ImmutableByml marker in stockStatic
                         .GetMap()
@@ -484,41 +486,42 @@ namespace BotwFlagUtil
                     {
                         if (marker.GetMap().TryGetValue(keyTable, "SaveFlag", out ImmutableByml saveFlag))
                         {
-                            vanillaLocSaveFlags.Add(saveFlag.GetString(stockStatic.StringTable));
+                            _vanillaLocSaveFlags.Add(saveFlag.GetString(stockStatic.StringTable));
                         }
                     }
                 }
-                return vanillaLocSaveFlags;
+                return _vanillaLocSaveFlags;
             }
         }
-        public static Dictionary<string, Vec3> VanillaShrineLocs
+
+        private static Dictionary<string, Vec3> VanillaShrineLocs
         {
             get
             {
-                if (vanillaShrineLocs == null)
+                if (_vanillaShrineLocs == null)
                 {
                     string jsonPath =
                         Path.Combine(AppContext.BaseDirectory, "data", "vanilla_shrines.json");
-                    vanillaShrineLocs =
+                    _vanillaShrineLocs =
                         JsonSerializer.Deserialize<Dictionary<string, Vec3>>(File.ReadAllText(jsonPath))!;
                 }
-                return vanillaShrineLocs;
+                return _vanillaShrineLocs;
             }
         }
 
         public static string GetFullModPath(string relativePath)
         {
-            if (RootDir == null)
+            if (rootDir == null)
             {
                 throw new InvalidOperationException("Attempted to read path without root directory");
             }
             string[] paths = ModEndianness == Endianness.Big ? 
             [
-                Path.Combine(RootDir, "aoc", "0010", relativePath),
-                Path.Combine(RootDir, "content", relativePath)
+                Path.Combine(rootDir, "aoc", "0010", relativePath),
+                Path.Combine(rootDir, "content", relativePath)
             ] : [
-                Path.Combine(RootDir, "01007EF00011F001", "romfs", relativePath),
-                Path.Combine(RootDir, "01007EF00011E800", "romfs", relativePath)
+                Path.Combine(rootDir, "01007EF00011F001", "romfs", relativePath),
+                Path.Combine(rootDir, "01007EF00011E800", "romfs", relativePath)
             ];
 
             foreach (string path in paths)
@@ -534,37 +537,37 @@ namespace BotwFlagUtil
         public static string GetFullStockPath(string relativePath)
         {
             Settings settings = Settings.Load();
-            string rootDir;
+            string root;
             if (ModEndianness == Endianness.Big)
             {
-                if (File.Exists(Path.Combine(settings.dlcDir, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.dlcDir, relativePath)))
+                if (File.Exists(Path.Combine(settings.DlcDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.DlcDir, relativePath)))
                 {
-                    rootDir = settings.dlcDir;
+                    root = settings.DlcDir;
                 }
-                else if (File.Exists(Path.Combine(settings.updateDir, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.updateDir, relativePath)))
+                else if (File.Exists(Path.Combine(settings.UpdateDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.UpdateDir, relativePath)))
                 {
-                    rootDir = settings.updateDir;
+                    root = settings.UpdateDir;
                 }
                 else
                 {
-                    rootDir = settings.gameDir;
+                    root = settings.GameDir;
                 }
             }
             else
             {
-                if (File.Exists(Path.Combine(settings.dlcDirNx, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.dlcDirNx, relativePath)))
+                if (File.Exists(Path.Combine(settings.DlcDirNx, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.DlcDirNx, relativePath)))
                 {
-                    rootDir = settings.dlcDirNx;
+                    root = settings.DlcDirNx;
                 }
                 else
                 {
-                    rootDir = settings.gameDirNx;
+                    root = settings.GameDirNx;
                 }
             }
-            return Path.Combine(rootDir, relativePath);
+            return Path.Combine(root, relativePath);
         }
 
         public static string GetNearestShrine(Vec3 loc)
@@ -635,34 +638,26 @@ namespace BotwFlagUtil
             byte[] indentation = new byte[writer.CurrentDepth * 2 + 2].Fill((byte)' ');
             indentation[0] = (byte)',';
             indentation[1] = (byte)'\n';
-            byte[] utf8bytes = new byte[value.Count * (31 + (writer.Options.Indented ? indentation.Length : 0))];
+            byte[] utf8Bytes = new byte[value.Count * (31 + (writer.Options.Indented ? indentation.Length : 0))];
             int arrayPos = 0;
             if (writer.Options.Indented)
             {
-                indentation[1..].CopyTo(utf8bytes, arrayPos);
+                indentation[1..].CopyTo(utf8Bytes, arrayPos);
                 arrayPos += indentation.Length - 1;
             }
             for (int i = 0; i < value.Count; ++i)
             {
                 float f = value[i];
-                byte[] toAdd;
-                if (!float.IsFinite(f))
-                {
-                    toAdd = GetInfiniteValue(f).ToArray();
-                }
-                else
-                {
-                    toAdd = Encoding.UTF8.GetBytes(f.ToString("0.0###", CultureInfo.InvariantCulture));
-                }
-                toAdd.CopyTo(utf8bytes, arrayPos);
+                var toAdd = !float.IsFinite(f) ?
+                    GetInfiniteValue(f).ToArray() :
+                    Encoding.UTF8.GetBytes(f.ToString("0.0###", CultureInfo.InvariantCulture));
+                toAdd.CopyTo(utf8Bytes, arrayPos);
                 arrayPos += toAdd.Length;
-                if (writer.Options.Indented && i < value.Count - 1)
-                {
-                    indentation.CopyTo(utf8bytes, arrayPos);
-                    arrayPos += indentation.Length;
-                }
+                if (!writer.Options.Indented || i >= value.Count - 1) continue;
+                indentation.CopyTo(utf8Bytes, arrayPos);
+                arrayPos += indentation.Length;
             }
-            writer.WriteRawValue(utf8bytes.AsSpan(0, arrayPos), true);
+            writer.WriteRawValue(utf8Bytes.AsSpan(0, arrayPos), true);
             writer.WriteEndArray();
         }
 
@@ -677,6 +672,10 @@ namespace BotwFlagUtil
             throw new ArgumentException($"GetInfiniteValue called with finite value {f}", nameof(f));
         }
 
-        public override List<float> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+        public override List<float> Read(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options
+        ) => throw new NotImplementedException();
     }
 }

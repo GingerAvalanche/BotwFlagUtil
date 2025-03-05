@@ -1,11 +1,11 @@
-﻿using BymlLibrary;
-using BymlLibrary.Nodes.Containers;
-using BymlLibrary.Nodes.Immutable.Containers;
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using BymlLibrary;
+using BymlLibrary.Nodes.Containers;
+using BymlLibrary.Nodes.Immutable.Containers;
 
-namespace BotwFlagUtil.GameData.Util
+namespace BotwFlagUtil.Models.GameData.Util
 {
     [StructLayout(LayoutKind.Explicit, Size = 8)]
     public struct Vec2 : IEquatable<Vec2>
@@ -25,14 +25,14 @@ namespace BotwFlagUtil.GameData.Util
             _y = floats[1];
         }
 
-        public Vec2(ImmutableByml byml)
+        private Vec2(ImmutableByml byml)
         {
             ImmutableBymlArray array = byml.GetArray()[0].GetArray();
             _x = array[0].GetFloat();
             _y = array[1].GetFloat();
         }
 
-        public Vec2(Byml byml)
+        private Vec2(Byml byml)
         {
             BymlArray array = byml.GetArray()[0].GetArray();
             _x = array[0].GetFloat();
@@ -62,7 +62,9 @@ namespace BotwFlagUtil.GameData.Util
         public static implicit operator Vec2(ImmutableByml byml) => new(byml);
         public static implicit operator Vec2(Byml byml) => new(byml);
 
-        public readonly bool Equals(Vec2 other) => _x == other.X && _y == other.Y;
+        public readonly bool Equals(Vec2 other) => Math.Abs(_x - other.X) < Tolerance &&
+                                                   Math.Abs(_y - other.Y) < Tolerance;
+        private const float Tolerance = 10e-5f;
 
         public readonly override bool Equals(object? obj) => obj is Vec2 vec && Equals(vec);
 

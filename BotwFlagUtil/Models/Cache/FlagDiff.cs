@@ -1,5 +1,7 @@
 ﻿using BotwFlagUtil.GameData;
 using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models.GameData;
+using BotwFlagUtil.Models.GameData.Util;
 using ProtoBuf;
 
 namespace BotwFlagUtil.Models.Cache

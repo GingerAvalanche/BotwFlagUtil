@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models.GameData.Util;
 using BymlLibrary;
 using BymlLibrary.Extensions;
 using BymlLibrary.Nodes.Immutable.Containers;
 
-namespace BotwFlagUtil
+namespace BotwFlagUtil.Models
 {
     internal static class Extensions
     {
@@ -44,7 +45,7 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static List<float> GetFloats(this ImmutableByml node)
+        private static List<float> GetFloats(this ImmutableByml node)
         {
             // Array[1].Map["Values"].Array[many].Float
             ImmutableBymlArray array = node.GetArray()[0].GetMap()[0].Node.GetArray();
@@ -56,7 +57,7 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static List<int> GetInts(this ImmutableByml node)
+        private static List<int> GetInts(this ImmutableByml node)
         {
             // Array[1].Map["Values"].Array[many].Int
             ImmutableBymlArray array = node.GetArray()[0].GetMap()[0].Node.GetArray();
@@ -68,7 +69,7 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static List<string> GetStrings(this ImmutableByml node, ImmutableBymlStringTable stringTable)
+        private static List<string> GetStrings(this ImmutableByml node, ImmutableBymlStringTable stringTable)
         {
             // Array[1].Map["Values"].Array[many].String
             ImmutableBymlArray array = node.GetArray()[0].GetMap()[0].Node.GetArray();
@@ -80,7 +81,7 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static float[] GetVec(this ImmutableByml node)
+        private static float[] GetVec(this ImmutableByml node)
         {
             // Array[1].Vec
             ImmutableBymlArray array = node.GetArray()[0].GetArray();
@@ -93,7 +94,7 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static List<float[]> GetVecArray(this ImmutableByml node)
+        private static List<float[]> GetVecArray(this ImmutableByml node)
         {
             // Array[1].Map["Values"].Array[many].Array[1].Vec
             ImmutableBymlArray array = node.GetArray()[0].GetMap()[0].Node.GetArray();
@@ -112,7 +113,9 @@ namespace BotwFlagUtil
             return result;
         }
 
-        public static FlagUnion GetFlagUnion(this ImmutableByml node, FlagUnionType type, ImmutableBymlStringTable stringTable)
+        public static FlagUnion GetFlagUnion(this ImmutableByml node,
+            FlagUnionType type,
+            ImmutableBymlStringTable stringTable)
         {
             return type switch
             {
@@ -134,22 +137,54 @@ namespace BotwFlagUtil
         }
 
         // Array[1].Map["Values"].Array[many].Bool
-        public static List<bool> GetBools(this Byml node) => node.GetArray()[0].GetMap()["Values"].GetArray().Select(n => n.GetBool()).ToList();
+        public static List<bool> GetBools(this Byml node) =>
+            node.GetArray()[0]
+                .GetMap()["Values"]
+                .GetArray()
+                .Select(n => n.GetBool())
+                .ToList();
 
         // Array[1].Map["Values"].Array[many].Float
-        public static List<float> GetFloats(this Byml node) => node.GetArray()[0].GetMap()["Values"].GetArray().Select(n => n.GetFloat()).ToList();
+        private static List<float> GetFloats(this Byml node) =>
+            node.GetArray()[0]
+                .GetMap()["Values"]
+                .GetArray()
+                .Select(n => n.GetFloat())
+                .ToList();
 
         // Array[1].Map["Values"].Array[many].Int
-        public static List<int> GetInts(this Byml node) => node.GetArray()[0].GetMap()["Values"].GetArray().Select(n => n.GetInt()).ToList();
+        private static List<int> GetInts(this Byml node) =>
+            node.GetArray()[0]
+                .GetMap()["Values"]
+                .GetArray()
+                .Select(n => n.GetInt())
+                .ToList();
 
         // Array[1].Map["Values"].Array[many].String
-        public static List<string> GetStrings(this Byml node) => node.GetArray()[0].GetMap()["Values"].GetArray().Select(n => n.GetString()).ToList();
+        private static List<string> GetStrings(this Byml node) =>
+            node.GetArray()[0]
+                .GetMap()["Values"]
+                .GetArray()
+                .Select(n => n.GetString())
+                .ToList();
 
         // Array[1].Vec
-        public static float[] GetVec(this Byml node) => node.GetArray()[0].GetArray().Select(n => n.GetFloat()).ToArray();
+        private static float[] GetVec(this Byml node) =>
+            node.GetArray()[0]
+                .GetArray()
+                .Select(n => n.GetFloat())
+                .ToArray();
 
         // Array[1].Map["Values"].Array[many].Array[1].Vec
-        public static List<float[]> GetVecArray(this Byml node) => node.GetArray()[0].GetMap()["Values"].GetArray().Select(l => l.GetArray()[0].GetArray().Select(n => n.GetFloat()).ToArray()).ToList();
+        private static List<float[]> GetVecArray(this Byml node) =>
+            node.GetArray()[0]
+                .GetMap()["Values"]
+                .GetArray()
+                .Select(l => l.GetArray()[0]
+                    .GetArray()
+                    .Select(n => n.GetFloat())
+                    .ToArray())
+                .ToList();
 
         public static FlagUnion GetFlagUnion(this Byml node, FlagUnionType type)
         {
@@ -172,7 +207,10 @@ namespace BotwFlagUtil
             };
         }
 
-        internal static bool TryGetValue(this ImmutableBymlMap map, ImmutableBymlStringTable table, string key, out ImmutableByml value)
+        internal static bool TryGetValue(this ImmutableBymlMap map,
+            ImmutableBymlStringTable table,
+            string key,
+            out ImmutableByml value)
         {
             foreach (var (mapKeyIdx, mapValue) in map)
             {
@@ -200,6 +238,8 @@ namespace BotwFlagUtil
             throw new KeyNotFoundException(key);
         }
 
-        internal static string GetString(this ImmutableByml byml, ImmutableBymlStringTable table) => table[byml.GetStringIndex()].ToManaged();
+        internal static string GetString(this ImmutableByml byml, ImmutableBymlStringTable table) =>
+            table[byml.GetStringIndex()]
+                .ToManaged();
     }
 }

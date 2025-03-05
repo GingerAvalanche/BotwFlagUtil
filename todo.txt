@@ -1,13 +1,17 @@
 TODO:
-add filter for flag list
-add buttons to go to next unconfirmed flag
-make categories uneditable, use dropdown with strings instead of integers
 korok flags based on static.smubin?
 IsDefeat flags (hinox/stalnox category 8, molduga category 9, talus category 10)
 OreDrop# flags? (figure out what these are, how they are determined to be needed, what they actually do)
+flag metadata section (why was the flag made? why are the properties the way they are?)
 
 DONE:
+make categories uneditable, use strings instead of integers
 make sure categories get saved to output
 revival flags based on actor tags (except shrines, RevivalBloodyMoon becomes type 2 instead of 1)
 Defeated_[actor_name]_Num flags (use LevelSensor to determine which ones are needed)
 quest flags (QuestProduct.sbquestpack)
+add filters for flag list
+add mod change cache in appdata (write changes when manual, delete changes when automatic, load changes on mod load)
+
+CANCELED:
+add buttons to go to next unconfirmed flag - Filters basically render this obsolete

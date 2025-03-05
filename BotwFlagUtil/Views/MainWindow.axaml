@@ -112,10 +112,10 @@
                      Grid.Row="3"
                      Text="Category:"
                      VerticalAlignment="Center"/>
-          <TextBox Grid.Column="1"
-                   Grid.Row="3"
-                   Text="{Binding Flag.Category}"
-                   IsEnabled="{Binding UseCategory}"/>
+          <TextBlock Grid.Column="1"
+                     Grid.Row="3"
+                     Text="{Binding Category}"
+                     VerticalAlignment="Center"/>
           <TextBlock Grid.Column="0"
                      Grid.Row="4"
                      Text="InitValue:"

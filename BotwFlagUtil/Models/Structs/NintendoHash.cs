@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Aamp.Security.Cryptography;
 using BymlLibrary;
 
-namespace BotwFlagUtil
+namespace BotwFlagUtil.Models.Structs
 {
     [JsonConverter(typeof(NintendoHashConverter))]
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -16,7 +16,7 @@ namespace BotwFlagUtil
         [FieldOffset(0)]
         public uint uvalue;
 
-        public NintendoHash(Byml byml)
+        private NintendoHash(Byml byml)
         {
             if (byml.Type == BymlNodeType.Int)
             {
@@ -29,7 +29,7 @@ namespace BotwFlagUtil
         }
         public static implicit operator NintendoHash(Byml byml) => new(byml);
 
-        public NintendoHash(ImmutableByml ibyml)
+        private NintendoHash(ImmutableByml ibyml)
         {
             if (ibyml.Type == BymlNodeType.Int)
             {
@@ -42,19 +42,19 @@ namespace BotwFlagUtil
         }
         public static implicit operator NintendoHash(ImmutableByml byml) => new(byml);
 
-        public NintendoHash(int val)
+        private NintendoHash(int val)
         {
             ivalue = val;
         }
         public static implicit operator NintendoHash(int val) => new(val);
 
-        public NintendoHash(uint val)
+        private NintendoHash(uint val)
         {
             uvalue = val;
         }
         public static implicit operator NintendoHash(uint val) => new(val);
 
-        public NintendoHash(string val)
+        private NintendoHash(string val)
         {
             uvalue = Crc32.Compute(val);
         }
@@ -69,7 +69,7 @@ namespace BotwFlagUtil
             return new Byml(ivalue);
         }
 
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             if (ivalue < 0)
             {

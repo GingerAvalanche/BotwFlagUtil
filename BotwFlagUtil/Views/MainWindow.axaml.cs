@@ -10,7 +10,6 @@ using BotwFlagUtil.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
-using SharpYaml.Tokens;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,7 +21,7 @@ public partial class MainWindow : Window
     readonly WindowIcon icon;
     public MainWindow()
     {
-        InitializeComponent(true);
+        InitializeComponent();
 
         MainWindowViewModel vm = new();
         DataContext = vm;

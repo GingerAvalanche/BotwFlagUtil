@@ -1,10 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using BotwFlagUtil.ViewModels;
 using System;
-using System.IO;
-using System.Threading.Tasks;
+using BotwFlagUtil.Models;
 
 namespace BotwFlagUtil.Views
 {
@@ -36,37 +34,35 @@ namespace BotwFlagUtil.Views
 
         private void DumpBox_TextChanged(object? sender, TextChangedEventArgs e)
         {
+            if (e.Source is not TextBox box) return;
             bool valid;
-            if (e.Source is TextBox box)
+            switch (box.Name)
             {
-                switch (box.Name)
-                {
-                    case "GameDir":
-                        valid = Settings.ValidateGameDir(box.Text!);
-                        GameDirValid.IsVisible = valid;
-                        GameDirInvalid.IsVisible = !valid;
-                        break;
-                    case "UpdateDir":
-                        valid = Settings.ValidateUpdateDir(box.Text!);
-                        UpdateDirValid.IsVisible = valid;
-                        UpdateDirInvalid.IsVisible = !valid;
-                        break;
-                    case "DlcDir":
-                        valid = Settings.ValidateDlcDir(box.Text!);
-                        DlcDirValid.IsVisible = valid;
-                        DlcDirInvalid.IsVisible = !valid;
-                        break;
-                    case "GameDirNx":
-                        valid = Settings.ValidateGameDirNx(box.Text!);
-                        GameDirNxValid.IsVisible = valid;
-                        GameDirNxInvalid.IsVisible = !valid;
-                        break;
-                    case "DlcDirNx":
-                        valid = Settings.ValidateDlcDirNx(box.Text!);
-                        DlcDirNxValid.IsVisible = valid;
-                        DlcDirNxInvalid.IsVisible = !valid;
-                        break;
-                }
+                case "GameDir":
+                    valid = Settings.ValidateGameDir(box.Text!);
+                    GameDirValid.IsVisible = valid;
+                    GameDirInvalid.IsVisible = !valid;
+                    break;
+                case "UpdateDir":
+                    valid = Settings.ValidateUpdateDir(box.Text!);
+                    UpdateDirValid.IsVisible = valid;
+                    UpdateDirInvalid.IsVisible = !valid;
+                    break;
+                case "DlcDir":
+                    valid = Settings.ValidateDlcDir(box.Text!);
+                    DlcDirValid.IsVisible = valid;
+                    DlcDirInvalid.IsVisible = !valid;
+                    break;
+                case "GameDirNx":
+                    valid = Settings.ValidateGameDirNx(box.Text!);
+                    GameDirNxValid.IsVisible = valid;
+                    GameDirNxInvalid.IsVisible = !valid;
+                    break;
+                case "DlcDirNx":
+                    valid = Settings.ValidateDlcDirNx(box.Text!);
+                    DlcDirNxValid.IsVisible = valid;
+                    DlcDirNxInvalid.IsVisible = !valid;
+                    break;
             }
         }
 

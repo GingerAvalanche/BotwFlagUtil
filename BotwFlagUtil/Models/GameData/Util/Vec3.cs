@@ -29,7 +29,7 @@ namespace BotwFlagUtil.GameData.Util
             _z = floats[2];
         }
 
-        public Vec3(ImmutableByml byml)
+        private Vec3(ImmutableByml byml)
         {
             ImmutableBymlArray array = byml.GetArray()[0].GetArray();
             _x = array[0].GetFloat();
@@ -37,7 +37,7 @@ namespace BotwFlagUtil.GameData.Util
             _z = array[2].GetFloat();
         }
 
-        public Vec3(Byml byml)
+        private Vec3(Byml byml)
         {
             BymlArray array = byml.GetArray()[0].GetArray();
             _x = array[0].GetFloat();
@@ -70,7 +70,10 @@ namespace BotwFlagUtil.GameData.Util
         public static implicit operator Vec3(ImmutableByml byml) => new(byml);
         public static implicit operator Vec3(Byml byml) => new(byml);
 
-        public readonly bool Equals(Vec3 other) => _x == other.X && _y == other.Y && _z == other.Z;
+        public readonly bool Equals(Vec3 other) => Math.Abs(_x - other.X) < Tolerance &&
+                                                   Math.Abs(_y - other.Y) < Tolerance &&
+                                                   Math.Abs(_z - other.Z) < Tolerance;
+        private const float Tolerance = 10e-5f;
 
         public readonly override bool Equals(object? obj) => obj is Vec3 vec && Equals(vec);
 

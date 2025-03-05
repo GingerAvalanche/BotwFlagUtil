@@ -1,73 +1,77 @@
-﻿using BotwFlagUtil.GameData;
-using ProtoBuf;
+﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BotwFlagUtil.Models.GameData;
+using BotwFlagUtil.Models.Structs;
 
 namespace BotwFlagUtil.Models.Cache
 {
-    internal class FlagCache
+    internal static class FlagCache
     {
-        private static readonly string cache_folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "botw_tools", "cache");
-        private static Dictionary<uint, FlagDiff> cache = [];
-        private static bool initialized = false;
-        private static string cacheName = string.Empty;
-        private static readonly Dictionary<NintendoHash, Flag> orig = [];
+        private static readonly string CacheFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "botw_tools",
+            "cache");
+        private static Dictionary<uint, FlagDiff> _cache = [];
+        private static bool _initialized;
+        private static string _cacheName = string.Empty;
+        private static readonly Dictionary<NintendoHash, Flag> Orig = [];
 
-        internal static void Init(string modName_, FlagMgr mgr)
+        internal static void Init(string modName, FlagMgr mgr)
         {
-            if (initialized)
+            if (_initialized)
             {
                 throw new InvalidOperationException("FlagCache already initialized!");
             }
             foreach (Flag flag in mgr.GetAllFlags())
             {
-                orig[flag.HashValue] = flag;
+                Orig[flag.HashValue] = flag;
             }
-            cacheName = $"{modName_}_flag.cache";
-            if (!Directory.Exists(cache_folder))
+            _cacheName = $"{modName}_flag.cache";
+            if (!Directory.Exists(CacheFolder))
             {
-                Directory.CreateDirectory(cache_folder);
+                Directory.CreateDirectory(CacheFolder);
             }
             else
             {
-                string cache_path = Path.Combine(cache_folder, cacheName);
-                if (File.Exists(cache_path))
+                string cachePath = Path.Combine(CacheFolder, _cacheName);
+                if (File.Exists(cachePath))
                 {
-                    using FileStream stream = File.OpenRead(cache_path);
-                    cache = Serializer.Deserialize<Dictionary<uint, FlagDiff>>(stream);
+                    using FileStream stream = File.OpenRead(cachePath);
+                    _cache = Serializer.Deserialize<Dictionary<uint, FlagDiff>>(stream);
                 }
             }
-            initialized = true;
+            _initialized = true;
         }
 
-        internal static void Apply(Flag new_)
+        internal static void Apply(Flag newFlag)
         {
-            if (!initialized)
+            if (!_initialized)
             {
                 throw new InvalidOperationException("FlagCache not initialized!");
             }
-            FlagDiff diff = new(new_, orig[new_.HashValue]);
+            FlagDiff diff = new(newFlag, Orig[newFlag.HashValue]);
             if (!diff.IsEmpty())
             {
-                cache[new_.HashValue.uvalue] = diff;
+                _cache[newFlag.HashValue.uvalue] = diff;
             }
             else
             {
-                cache.Remove(new_.HashValue.uvalue);
+                _cache.Remove(newFlag.HashValue.uvalue);
             }
-            using FileStream stream = File.OpenWrite(Path.Combine(cache_folder, cacheName));
-            Serializer.Serialize(stream, cache);
+            using FileStream stream = File.OpenWrite(Path.Combine(CacheFolder, _cacheName));
+            Serializer.Serialize(stream, _cache);
         }
 
         internal static IEnumerable<Flag> RecallAll()
         {
-            if (!initialized)
+            if (!_initialized)
             {
                 throw new InvalidOperationException("FlagCache not initialized!");
             }
-            return cache.Where(kvp => orig.ContainsKey(kvp.Key)).Select(kvp => kvp.Value.Apply(orig[kvp.Key]));
+            return _cache.Where(kvp => Orig.ContainsKey(kvp.Key)).Select(kvp => kvp.Value.Apply(Orig[kvp.Key]));
         }
     }
 }

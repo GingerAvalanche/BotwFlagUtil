@@ -5,17 +5,19 @@ using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls.Selection;
 using Avalonia.Media;
-using BotwFlagUtil.Enums;
-using BotwFlagUtil.GameData;
-using BotwFlagUtil.GameData.Util;
+using BotwFlagUtil.Models;
 using BotwFlagUtil.Models.Cache;
+using BotwFlagUtil.Models.Enums;
+using BotwFlagUtil.Models.GameData;
+using BotwFlagUtil.Models.GameData.Util;
 using ReactiveUI;
+using Revrs;
 
 namespace BotwFlagUtil.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    public static readonly Dictionary<string, SolidColorBrush> Brushes = new()
+    private static readonly Dictionary<string, SolidColorBrush> Brushes = new()
     {
         { "FgRed", new SolidColorBrush(0xFFEB0050) },
         { "FgYellow", new SolidColorBrush(0xFF9B6E00) },
@@ -52,7 +54,8 @@ public class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Filter Members
-    public int filterMask = 0b1111110;
+
+    private int filterMask = 0b1111110;
     public bool FilterBlue
     {
         set => filterMask ^= (-Convert.ToInt32(value) ^ filterMask) & (1 << (int)GeneratorConfidence.Definite);
@@ -80,7 +83,8 @@ public class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Current Flag Fields
-    private Flag flag = default;
+
+    private Flag flag;
     private FlagUnionType flagType = FlagUnionType.None;
     private string initValue = string.Empty;
     private string maxValue = string.Empty;
@@ -89,37 +93,18 @@ public class MainWindowViewModel : ViewModelBase
     private bool canConfirmInit = true;
     private bool canConfirmMax = true;
     private bool canConfirmMin = true;
-    private bool confirmed = false;
+    private bool confirmed;
     private string confirmText = "Confirmed \u2610";
     #endregion
 
     #region Current Flag Properties
-    public bool IsFlagLoaded
-    {
-        get => flag.HashValue != 0;
-    }
-    public bool UseCategory
-    {
-        get => flag.Category != null;
-    }
-    public static string[] Categories
-    {
-        get => [
-            "Clear (Dungeon/Shrine Clear)",
-            "Animal",
-            "Enemy",
-            "Sozai (Resources/Ingredients)",
-            "Weapon (Swords/Spears/Shields/Bows)",
-            "Other",
-            "Boss",
-            "Hinox/Stalnox",
-            "Molduga",
-            "Talus",
-            "Korok",
-            "DLC",
-            "HardMode",
-        ];
-    }
+    public bool IsFlagLoaded => flag.HashValue != 0;
+
+    public string Category =>
+        flag.Category == null
+            ? FlagCategory.None.ToString()
+            : ((FlagCategory)flag.Category).ToString();
+
     public string FlagType
     {
         get => flagType.ToString();
@@ -127,10 +112,9 @@ public class MainWindowViewModel : ViewModelBase
             ref flagType, (FlagUnionType)Enum.Parse(typeof(FlagUnionType), value)
         );
     }
-    public FlagUnionType InitValueType
-    {
-        get => Helpers.mainTypeToInitType[flagType];
-    }
+
+    private FlagUnionType InitValueType => Helpers.MainTypeToInitType[flagType];
+
     public string InitValue
     {
         get => initValue;
@@ -156,12 +140,10 @@ public class MainWindowViewModel : ViewModelBase
     public Flag Flag
     {
         get => flag;
-        set => this.RaiseAndSetIfChanged(ref flag, value);
+        private set => this.RaiseAndSetIfChanged(ref flag, value);
     }
-    private FlagUnionType BoundingValueType
-    {
-        get => Helpers.mainTypeToMaxOrMinType[flagType];
-    }
+    private FlagUnionType BoundingValueType => Helpers.MainTypeToMaxOrMinType[flagType];
+
     public string MaxValue
     {
         get => maxValue;
@@ -206,81 +188,88 @@ public class MainWindowViewModel : ViewModelBase
             }
         }
     }
+
     public bool IsEventAssociated
     {
         get => flag.IsEventAssociated;
         set
         {
             flag.IsEventAssociated = value;
-            this.RaisePropertyChanged(nameof(IsEventAssociated));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
+    
     public bool IsOneTrigger
     {
         get => flag.IsOneTrigger;
         set
         {
             flag.IsOneTrigger = value;
-            this.RaisePropertyChanged(nameof(IsOneTrigger));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
+    
     public bool IsProgramReadable
     {
         get => flag.IsProgramReadable;
         set
         {
             flag.IsProgramReadable = value;
-            this.RaisePropertyChanged(nameof(IsProgramReadable));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
+    
     public bool IsProgramWritable
     {
         get => flag.IsProgramWritable;
         set
         {
             flag.IsProgramWritable = value;
-            this.RaisePropertyChanged(nameof(IsProgramWritable));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
+    
     public bool IsSave
     {
         get => flag.IsSave;
         set
         {
             flag.IsSave = value;
-            this.RaisePropertyChanged(nameof(IsSave));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
-    public static string[] ResetTypes
-    {
-        get => [
-            "Manual reset",
-            "Reset on blood moon",
-            "Reset on loading screen",
-            "Reset at midnight",
-            "Reset when Lord of the Mountain appears"
-        ];
-    }
+    
+    public static string[] ResetTypes =>
+    [
+        "Manual reset",
+        "Reset on blood moon",
+        "Reset on loading screen",
+        "Reset at midnight",
+        "Reset when Lord of the Mountain appears"
+    ];
+
     public int ResetType
     {
         get => flag.ResetType;
         set
         {
             flag.ResetType = value;
-            this.RaisePropertyChanged(nameof(ResetType));
+            this.RaisePropertyChanged();
             ConfirmHelper_UpdateUINoFilter(false);
         }
     }
-    public bool CanConfirm
+
+    private bool CanConfirm
     {
         get => canConfirm;
         set => this.RaiseAndSetIfChanged(ref canConfirm, value);
     }
+    
     private bool CanConfirmInit
     {
         set
@@ -289,6 +278,7 @@ public class MainWindowViewModel : ViewModelBase
             CanConfirm = canConfirmInit & canConfirmMax & canConfirmMin;
         }
     }
+    
     private bool CanConfirmMax
     {
         set
@@ -297,6 +287,7 @@ public class MainWindowViewModel : ViewModelBase
             CanConfirm = canConfirmInit & canConfirmMax & canConfirmMin;
         }
     }
+    
     private bool CanConfirmMin
     {
         set
@@ -308,9 +299,11 @@ public class MainWindowViewModel : ViewModelBase
 
     private string ConfirmText
     {
+        // ReSharper disable once UnusedMember.Local
         get => confirmText;
         set => this.RaiseAndSetIfChanged(ref confirmText, value);
     }
+
     #endregion
 
     public MainWindowViewModel()
@@ -319,17 +312,17 @@ public class MainWindowViewModel : ViewModelBase
         FlagNameSelection.SelectionChanged += OnFlagNameSelected;
     }
 
-    public void OnFlagNameSelected(object? sender, SelectionModelSelectionChangedEventArgs e)
+    private void OnFlagNameSelected(object? sender, SelectionModelSelectionChangedEventArgs e)
     {
         if (e.SelectedItems.Count > 0 &&
             e.SelectedItems.Single() is string nextFlagName &&
             nextFlagName != flag.DataName && 
-            generator.mgr.TryGet(
+            generator.Mgr.TryGet(
                 nextFlagName, out Flag newFlag, out FlagUnionType fType, out FlagStringType sType
             ))
         {
             // Reset the flag background color to the stored confirmation status
-            if (flag.DataName != null && confirmeds.TryGetValue(flag.DataName, out bool value))
+            if (confirmeds.TryGetValue(flag.DataName, out bool value))
             {
                 BgColors[flag.DataName].Color = GetBackgroundColor(value).Color;
             }
@@ -353,7 +346,7 @@ public class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(IsProgramWritable));
             this.RaisePropertyChanged(nameof(IsSave));
             this.RaisePropertyChanged(nameof(ResetType));
-            this.RaisePropertyChanged(nameof(UseCategory));
+            this.RaisePropertyChanged(nameof(Category));
             this.RaisePropertyChanged(nameof(IsFlagLoaded));
         }
     }
@@ -370,7 +363,7 @@ public class MainWindowViewModel : ViewModelBase
         }
         string modName = Path.GetFileName(rootDir);
         Title = $"BotwFlagUtil - {modName}";
-        Helpers.RootDir = rootDir;
+        Helpers.rootDir = rootDir;
 
         generator.ReplaceManager(new());
         generator.GenerateActorFlags();
@@ -380,29 +373,28 @@ public class MainWindowViewModel : ViewModelBase
         generator.GenerateEventFlags(); // Last because least certain
         generator.FinalizeGeneration();
 
-        IEnumerable<Flag> flags = generator.mgr.GetAllFlags();
-        List<string> flagNamesTemp = new(flags.Count());
+        List<string> flagNamesTemp = new(generator.Mgr.GetFlagCount());
         FgColors.Clear();
         FgColors.EnsureCapacity(flagNamesTemp.Capacity);
         BgColors.Clear();
         BgColors.EnsureCapacity(flagNamesTemp.Capacity);
         confirmeds.Clear();
         confirmeds.EnsureCapacity(flagNamesTemp.Capacity);
-        foreach (Flag flag in flags)
+        foreach (Flag f in generator.Mgr.GetAllFlags())
         {
-            flagNamesTemp.Add(flag.DataName);
-            FgColors[flag.DataName] = GetForegroundColor(generator.flagConfidence[flag.HashValue]);
-            BgColors[flag.DataName] = GetBackgroundColor(false);
-            confirmeds[flag.DataName] = false;
+            flagNamesTemp.Add(f.DataName);
+            FgColors[f.DataName] = GetForegroundColor(generator.FlagConfidence[f.HashValue]);
+            BgColors[f.DataName] = GetBackgroundColor(false);
+            confirmeds[f.DataName] = false;
         }
         flagNamesTemp.Sort();
         allFlagNames = flagNamesTemp;
         FlagNames = flagNamesTemp.Where(FlagListFilter).ToList();
 
-        FlagCache.Init(modName, generator.mgr);
+        FlagCache.Init(modName, generator.Mgr);
         foreach (Flag recalled in FlagCache.RecallAll())
         {
-            generator.mgr.Replace(recalled);
+            generator.Mgr.Replace(recalled);
             BgColors[recalled.DataName] = GetBackgroundColor(true);
             confirmeds[recalled.DataName] = true;
         }
@@ -412,20 +404,20 @@ public class MainWindowViewModel : ViewModelBase
 
     public void Export()
     {
-        if (Helpers.RootDir == null)
+        if (Helpers.rootDir == null)
         {
             return;
         }
 
-        using FileStream stream = File.Open(Path.Combine(Helpers.RootDir, "flags.json"), FileMode.Create);
-        JsonSerializer.Serialize(stream, generator.mgr, Helpers.jsOpt);
+        using FileStream stream = File.Open(Path.Combine(Helpers.rootDir, "flags.json"), FileMode.Create);
+        JsonSerializer.Serialize(stream, generator.Mgr, Helpers.JsOpt);
     }
 
     public void Import()
     {
-        if (Helpers.RootDir != null)
+        if (Helpers.rootDir != null)
         {
-            string flagPath = Path.Combine(Helpers.RootDir, "flags.json");
+            string flagPath = Path.Combine(Helpers.rootDir, "flags.json");
             if (File.Exists(flagPath))
             {
                 FlagMgr? flagMgr;
@@ -436,20 +428,19 @@ public class MainWindowViewModel : ViewModelBase
                 if (flagMgr != null)
                 {
                     generator.ReplaceManager(flagMgr);
-                    IEnumerable<Flag> flags = flagMgr.GetAllFlags();
-                    List<string> flagNamesTemp = new(flags.Count());
+                    List<string> flagNamesTemp = new(generator.Mgr.GetFlagCount());
                     FgColors.Clear();
                     FgColors.EnsureCapacity(flagNamesTemp.Capacity);
                     BgColors.Clear();
                     BgColors.EnsureCapacity(flagNamesTemp.Capacity);
                     confirmeds.Clear();
                     confirmeds.EnsureCapacity(flagNamesTemp.Capacity);
-                    foreach (Flag flag in flags)
+                    foreach (Flag f in generator.Mgr.GetAllFlags())
                     {
-                        flagNamesTemp.Add(flag.DataName);
-                        FgColors[flag.DataName] = GetForegroundColor(generator.flagConfidence[flag.HashValue]);
-                        BgColors[flag.DataName] = GetBackgroundColor(false);
-                        confirmeds[flag.DataName] = false;
+                        flagNamesTemp.Add(f.DataName);
+                        FgColors[f.DataName] = GetForegroundColor(generator.FlagConfidence[f.HashValue]);
+                        BgColors[f.DataName] = GetBackgroundColor(false);
+                        confirmeds[f.DataName] = false;
                     }
                     flagNamesTemp.Sort();
                     allFlagNames = flagNamesTemp;
@@ -467,7 +458,7 @@ public class MainWindowViewModel : ViewModelBase
     private bool FlagListFilter(string name)
     {
         // Mask, obtain confidence bit by right-shifting by confidence (ignoring possibility of Unknown) AND 1
-        return Convert.ToBoolean((filterMask >> (int)generator.flagConfidence[name]) & 1) &&
+        return Convert.ToBoolean((filterMask >> (int)generator.FlagConfidence[name]) & 1) &&
         // Mask, obtain confirmed bit by right-shifting by confirmed status (Plus 4 to bypass confidence bits) AND 1
             Convert.ToBoolean((filterMask >> (Convert.ToInt32(confirmeds[name]) + 5)) & 1);
     }
@@ -489,10 +480,10 @@ public class MainWindowViewModel : ViewModelBase
         return false;
     }
 
-    private void ConfirmHelper_UpdateUINoFilter(bool confirmed)
+    private void ConfirmHelper_UpdateUINoFilter(bool confirm)
     {
-        BgColors[flag.DataName].Color = GetBackgroundColor(confirmed).Color;
-        SetConfirmText(confirmed);
+        BgColors[flag.DataName].Color = GetBackgroundColor(confirm).Color;
+        SetConfirmText(confirm);
     }
 
     private void SetConfirmText(bool confirm)
@@ -505,41 +496,41 @@ public class MainWindowViewModel : ViewModelBase
         confirmeds[flag.DataName] = confirmed;
         if (confirmed)
         {
-            generator.mgr.Replace(flag);
+            generator.Mgr.Replace(flag);
             FlagCache.Apply(flag);
         }
     }
 
     public void Save()
     {
-        if (Helpers.RootDir != null)
+        if (Helpers.rootDir != null)
         {
             string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
             if (bootupPath == string.Empty)
             {
                 bootupPath = Path.Combine(
-                    Helpers.RootDir,
-                    Helpers.ModEndianness == Revrs.Endianness.Big ? "content" :
+                    Helpers.rootDir,
+                    Helpers.ModEndianness == Endianness.Big ? "content" :
                         "01007EF00011E800/romfs",
                     "Pack/Bootup.pack"
                 );
                 File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
             }
             FlagMgr compiled = FlagMgr.Open(bootupPath);
-            compiled.Merge(generator.mgr);
+            compiled.Merge(generator.Mgr);
             compiled.Write(bootupPath);
             NeedsSave = false;
         }
     }
 
     // Returns new brushes because each needs its own brush so the user confirmation can change
-    public static SolidColorBrush GetBackgroundColor(bool confirmed)
+    private static SolidColorBrush GetBackgroundColor(bool confirmed)
     {
         return confirmed ? new SolidColorBrush(0xFF98FB98) : new SolidColorBrush(0x00FFFFFF);
     }
 
     // Returns references to existing brushes because confidence will never change
-    public static SolidColorBrush GetForegroundColor(GeneratorConfidence confidence)
+    private static SolidColorBrush GetForegroundColor(GeneratorConfidence confidence)
     {
         return confidence switch
         {
