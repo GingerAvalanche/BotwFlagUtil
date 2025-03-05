@@ -362,7 +362,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             return;
         }
-        string modName = Path.GetFileName(rootDir);
+        string modName = Path.GetFileName(Path.TrimEndingDirectorySeparator(rootDir));
         Title = $"BotwFlagUtil - {modName}";
         Helpers.rootDir = rootDir;
 
