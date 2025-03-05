@@ -322,7 +322,8 @@ public class MainWindowViewModel : ViewModelBase
             ))
         {
             // Reset the flag background color to the stored confirmation status
-            if (confirmeds.TryGetValue(flag.DataName, out bool value))
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (flag.DataName != null && confirmeds.TryGetValue(flag.DataName, out bool value))
             {
                 BgColors[flag.DataName].Color = GetBackgroundColor(value).Color;
             }
