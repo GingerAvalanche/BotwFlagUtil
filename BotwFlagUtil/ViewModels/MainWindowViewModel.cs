@@ -297,7 +297,7 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private string ConfirmText
+    public string ConfirmText
     {
         // ReSharper disable once UnusedMember.Local
         get => confirmText;
