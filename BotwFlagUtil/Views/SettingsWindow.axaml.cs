@@ -2,7 +2,10 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using BotwFlagUtil.ViewModels;
 using System;
+using System.Threading.Tasks;
 using BotwFlagUtil.Models;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace BotwFlagUtil.Views
 {
@@ -68,38 +71,45 @@ namespace BotwFlagUtil.Views
 
         private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
         {
-            var selection = await StorageProvider.OpenFolderPickerAsync(
+            try
+            {
+                var selection = await StorageProvider.OpenFolderPickerAsync(
                     new()
                     {
                         Title = "Select the root folder of your dump",
                         AllowMultiple = false,
                     }
                 );
-            if (selection.Count != 1)
-            {
-                return;
-            }
-            string path = Uri.UnescapeDataString(selection[0].Path.AbsolutePath);
-            if (sender is Button button)
-            {
-                switch (button.Name)
+                if (selection.Count != 1)
                 {
-                    case "GameBrowse":
-                        GameDir.Text = path;
-                        break;
-                    case "UpdateBrowse":
-                        UpdateDir.Text = path;
-                        break;
-                    case "DlcBrowse":
-                        DlcDir.Text = path;
-                        break;
-                    case "GameNxBrowse":
-                        GameDirNx.Text = path;
-                        break;
-                    case "DlcNxBrowse":
-                        DlcDirNx.Text = path;
-                        break;
+                    return;
                 }
+                string path = Uri.UnescapeDataString(selection[0].Path.AbsolutePath);
+                if (sender is Button button)
+                {
+                    switch (button.Name)
+                    {
+                        case "GameBrowse":
+                            GameDir.Text = path;
+                            break;
+                        case "UpdateBrowse":
+                            UpdateDir.Text = path;
+                            break;
+                        case "DlcBrowse":
+                            DlcDir.Text = path;
+                            break;
+                        case "GameNxBrowse":
+                            GameDirNx.Text = path;
+                            break;
+                        case "DlcNxBrowse":
+                            DlcDirNx.Text = path;
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await ErrorDialog(ex);
             }
         }
 
@@ -112,6 +122,20 @@ namespace BotwFlagUtil.Views
         private void CancelButton_Click(object? sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private async Task ErrorDialog(Exception ex)
+        {
+            await MessageBoxManager.GetMessageBoxStandard(
+                new()
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Error",
+                    ContentMessage = ex.Message,
+                    MaxHeight = 800,
+                    Width = 500,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                }).ShowWindowDialogAsync(this);
         }
     }
 }

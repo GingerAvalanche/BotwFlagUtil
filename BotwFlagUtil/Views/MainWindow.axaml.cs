@@ -56,17 +56,24 @@ public partial class MainWindow : Window
 
     private async void Confirm_Click(object? sender, RoutedEventArgs e)
     {
-        if (!((MainWindowViewModel)DataContext!).Confirm())
+        try
         {
-            await MessageBoxManager.GetMessageBoxStandard(
-                new MessageBoxStandardParams()
-                {
-                    ButtonDefinitions = ButtonEnum.Ok,
-                    ContentTitle = "Can't Confirm",
-                    ContentMessage = "Could not confirm this flag. One of the properties does not contain a valid value!",
-                    WindowIcon = icon,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                }).ShowWindowDialogAsync(this);
+            if (!((MainWindowViewModel)DataContext!).Confirm())
+            {
+                await MessageBoxManager.GetMessageBoxStandard(
+                    new MessageBoxStandardParams()
+                    {
+                        ButtonDefinitions = ButtonEnum.Ok,
+                        ContentTitle = "Can't Confirm",
+                        ContentMessage = "Could not confirm this flag. One of the properties does not contain a valid value!",
+                        WindowIcon = icon,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    }).ShowWindowDialogAsync(this);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ErrorDialog(ex);
         }
     }
 
@@ -100,36 +107,50 @@ public partial class MainWindow : Window
 
     private async void About_Click(object? sender, RoutedEventArgs e)
     {
-        string message;
-        using (var streamReader = new StreamReader(AssetLoader.Open(new("avares://BotwFlagUtil/Assets/about.md"))))
+        try
         {
-            message = streamReader.ReadToEnd();
-        }
-        await MessageBoxManager.GetMessageBoxStandard(
-            new MessageBoxStandardParams()
+            string message;
+            using (var streamReader = new StreamReader(AssetLoader.Open(new("avares://BotwFlagUtil/Assets/about.md"))))
             {
-                ButtonDefinitions = ButtonEnum.Ok,
-                ContentTitle = "About",
-                ContentMessage = message,
-                Markdown = true,
-                MaxHeight = 800,
-                Width = 500,
-                WindowIcon = icon,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            }).ShowWindowDialogAsync(this);
+                message = await streamReader.ReadToEndAsync();
+            }
+            await MessageBoxManager.GetMessageBoxStandard(
+                new MessageBoxStandardParams()
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "About",
+                    ContentMessage = message,
+                    Markdown = true,
+                    MaxHeight = 800,
+                    Width = 500,
+                    WindowIcon = icon,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                }).ShowWindowDialogAsync(this);
+        }
+        catch (Exception ex)
+        {
+            await ErrorDialog(ex);
+        }
     }
 
     private async void Exit_Click(object? sender, RoutedEventArgs e)
     {
-        if (((MainWindowViewModel)DataContext!).NeedsSave &&
-            await DiscardConfirmationDialogue() == ButtonResult.No)
+        try
         {
-            return;
+            if (((MainWindowViewModel)DataContext!).NeedsSave &&
+                await DiscardConfirmationDialogue() == ButtonResult.No)
+            {
+                return;
+            }
+            if (Application.Current!.ApplicationLifetime is
+                IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                desktopLifetime.Shutdown();
+            }
         }
-        if (Application.Current!.ApplicationLifetime is
-            IClassicDesktopStyleApplicationLifetime desktopLifetime)
+        catch (Exception ex)
         {
-            desktopLifetime.Shutdown();
+            await ErrorDialog(ex);
         }
     }
 
@@ -164,26 +185,33 @@ public partial class MainWindow : Window
 
     private async void Open_ClickAsync(object? sender, RoutedEventArgs e)
     {
-        MainWindowViewModel vm = (MainWindowViewModel)DataContext!;
-        if (vm.NeedsSave && await DiscardConfirmationDialogue() == ButtonResult.No)
+        try
         {
-            return;
-        }
-        var selection = await StorageProvider.OpenFolderPickerAsync(
+            MainWindowViewModel vm = (MainWindowViewModel)DataContext!;
+            if (vm.NeedsSave && await DiscardConfirmationDialogue() == ButtonResult.No)
+            {
+                return;
+            }
+            var selection = await StorageProvider.OpenFolderPickerAsync(
                 new()
                 {
                     Title = "Select the root folder of your mod",
                     AllowMultiple = false,
                 }
             );
-        if (selection.Count != 1)
-        {
-            return;
+            if (selection.Count != 1)
+            {
+                return;
+            }
+            string folder = Uri.UnescapeDataString(selection[0].Path.AbsolutePath);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                vm.OpenMod(folder);
+            }
         }
-        string folder = Uri.UnescapeDataString(selection[0].Path.AbsolutePath);
-        if (!string.IsNullOrEmpty(folder))
+        catch (Exception ex)
         {
-            vm.OpenMod(folder);
+            await ErrorDialog(ex);
         }
     }
 
@@ -195,7 +223,14 @@ public partial class MainWindow : Window
 
     private async void Settings_Click(object? sender, RoutedEventArgs e)
     {
-        await new SettingsWindow().ShowDialog(this);
+        try
+        {
+            await new SettingsWindow().ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            await ErrorDialog(ex);
+        }
     }
 
     private async Task<ButtonResult> DiscardConfirmationDialogue()
@@ -207,6 +242,20 @@ public partial class MainWindow : Window
                 ContentTitle = "Discard Changes",
                 ContentMessage = "You are about to discard unsaved changes. Continue?",
                 WindowIcon = icon,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            }).ShowWindowDialogAsync(this);
+    }
+
+    private async Task ErrorDialog(Exception ex)
+    {
+        await MessageBoxManager.GetMessageBoxStandard(
+            new()
+            {
+                ButtonDefinitions = ButtonEnum.Ok,
+                ContentTitle = "Error",
+                ContentMessage = ex.Message,
+                MaxHeight = 800,
+                Width = 500,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
             }).ShowWindowDialogAsync(this);
     }
