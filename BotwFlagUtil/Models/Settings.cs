@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace BotwFlagUtil.Models
 {
@@ -24,29 +25,57 @@ namespace BotwFlagUtil.Models
         public static Settings Load()
         {
             Settings value;
-            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string settingsPath;
             if (File.Exists(SettingsPath))
             {
-                value = JsonSerializer.Deserialize<Settings>(
-                    File.ReadAllText(SettingsPath)
-                )!;
+                value = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsPath))!;
                 if (Validate(value))
                 {
                     return value;
                 }
             }
-            else if (File.Exists(Path.Combine(appdata, "bcml", "settings.json")))
+            else if (
+                (
+                    settingsPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "ukmm",
+                        "settings.yml"
+                    )
+                ) != null
+                && File.Exists(settingsPath)
+            )
             {
-                Dictionary<string, dynamic> bcmlSettings =
-                    JsonSerializer.Deserialize<Dictionary<string, dynamic>>(
-                        File.ReadAllText(Path.Combine(appdata, "bcml", "settings.json"))
-                    )!;
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                    .Build();
+                UkmmSettings ukmmSettings = deserializer.Deserialize<UkmmSettings>(File.ReadAllText(settingsPath));
                 value = new(
-                    bcmlSettings["game_dir"] as string ?? "",
-                    bcmlSettings["update_dir"] as string ?? "",
-                    bcmlSettings["dlc_dir"] as string ?? "",
-                    bcmlSettings["game_dir_nx"] as string ?? "",
-                    bcmlSettings["dlc_dir_nx"] as string ?? ""
+                    ukmmSettings.WiiuConfig?.Dump?.Source?.ContentDir ?? "",
+                    ukmmSettings.WiiuConfig?.Dump?.Source?.UpdateDir ?? "",
+                    ukmmSettings.WiiuConfig?.Dump?.Source?.AocDir ?? "",
+                    ukmmSettings.SwitchConfig?.Dump?.Source?.ContentDir ?? "",
+                    ukmmSettings.SwitchConfig?.Dump?.Source?.AocDir ?? ""
+                );
+            }
+            else if (
+                (
+                    settingsPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "bcml",
+                        "settings.json"
+                    )
+                ) != null
+                && File.Exists(settingsPath)
+            )
+            {
+                BcmlSettings? bcmlSettings =
+                    JsonSerializer.Deserialize<BcmlSettings>(File.ReadAllText(settingsPath), BcmlSettings.JsOpt);
+                value = new(
+                    bcmlSettings?.GameDir ?? "",
+                    bcmlSettings?.UpdateDir ?? "",
+                    bcmlSettings?.DlcDir ?? "",
+                    bcmlSettings?.GameDirNx ?? "",
+                    bcmlSettings?.DlcDirNx ?? ""
                 );
             }
             else
