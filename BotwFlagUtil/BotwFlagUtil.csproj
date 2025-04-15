@@ -39,7 +39,7 @@
     <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="protobuf-net" Version="3.2.46" />
-    <PackageReference Include="SarcLibrary" Version="3.2.0" />
+    <PackageReference Include="SarcLibrary" Version="3.2.1" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>

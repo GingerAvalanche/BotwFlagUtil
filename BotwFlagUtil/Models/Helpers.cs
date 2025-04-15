@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace BotwFlagUtil.Models
 {
     internal static class Helpers
     {
-        public static string? rootDir;
+        public static string? RootDir;
         private static Endianness? _modEndianness;
         private static Dictionary<string, Vec3>? _modShrineLocs;
         private static Dictionary<string, Vec3>? _allShrineLocs;
@@ -104,7 +105,7 @@ namespace BotwFlagUtil.Models
             { FlagUnionType.Vec3Array, FlagUnionType.Vec3 },
             { FlagUnionType.Vec4, FlagUnionType.Vec4 },
         };
-        public static Dictionary<FlagUnionType, FlagUnionType> arrayTypeToSingleType = new()
+        public static Dictionary<FlagUnionType, FlagUnionType> ArrayTypeToSingleType = new()
         {
             { FlagUnionType.Bool, FlagUnionType.Bool },
             { FlagUnionType.BoolArray, FlagUnionType.Bool },
@@ -411,13 +412,13 @@ namespace BotwFlagUtil.Models
             {
                 if (!_modEndianness.HasValue)
                 {
-                    if (rootDir == null)
+                    if (RootDir == null)
                     {
                         throw new InvalidOperationException(
-                            "Attempted to get endianness before rootdir set"
+                            "Attempted to get endianness before root directory was set"
                         );
                     }
-                    _modEndianness = Directory.Exists(Path.Combine(rootDir, "content")) ? 
+                    _modEndianness = Directory.Exists(Path.Combine(RootDir, "content")) ? 
                         Endianness.Big : Endianness.Little;
                 }
                 return _modEndianness.Value;
@@ -433,8 +434,7 @@ namespace BotwFlagUtil.Models
                 if (_allShrineLocs == null)
                 {
                     _allShrineLocs = new(VanillaShrineLocs); // Shallow copy, will never edit, only add new
-                    string staticPath = GetFullModPath("Map/MainField/Static.smubin");
-                    if (staticPath != string.Empty)
+                    if (TryGetFullModDlcPath("Map/MainField/Static.smubin", out var staticPath))
                     {
                         Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(staticPath));
                         RevrsReader reader = new(bytes, ModEndianness);
@@ -470,7 +470,7 @@ namespace BotwFlagUtil.Models
                 {
                     RevrsReader reader = new(
                         Yaz0.Decompress(
-                            File.ReadAllBytes(GetFullStockPath("Map/MainField/Static.smubin"))
+                            File.ReadAllBytes(GetFullDumpPath("Map/MainField/Static.smubin"))
                         ),
                         ModEndianness
                     );
@@ -509,32 +509,63 @@ namespace BotwFlagUtil.Models
             }
         }
 
-        public static string GetFullModPath(string relativePath)
+        public static string GamePath =>
+            ModEndianness == Endianness.Big ? "content" : Path.Combine("01007EF00011E000", "romfs");
+
+        public static string DlcPath =>
+            ModEndianness == Endianness.Big ? Path.Combine("aoc", "0010") : Path.Combine("01007EF00011E000", "romfs");
+
+        public static bool TryGetFullModPath(string relativePath, [NotNullWhen(true)]out string? absolutePath)
         {
-            if (rootDir == null)
+            if (TryGetFullModDlcPath(relativePath, out string? dlcPath))
+            {
+                absolutePath = dlcPath;
+                return true;
+            }
+            if (TryGetFullModGamePath(relativePath, out string? contentPath))
+            {
+                absolutePath = contentPath;
+                return true;
+            }
+            absolutePath = null;
+            return false;
+        }
+
+        public static bool TryGetFullModGamePath(string relativePath, [NotNullWhen(true)]out string? absolutePath)
+        {
+            if (RootDir == null)
             {
                 throw new InvalidOperationException("Attempted to read path without root directory");
             }
-            string[] paths = ModEndianness == Endianness.Big ? 
-            [
-                Path.Combine(rootDir, "aoc", "0010", relativePath),
-                Path.Combine(rootDir, "content", relativePath)
-            ] : [
-                Path.Combine(rootDir, "01007EF00011F001", "romfs", relativePath),
-                Path.Combine(rootDir, "01007EF00011E800", "romfs", relativePath)
-            ];
+            string path = Path.Combine(RootDir, GamePath, relativePath);
 
-            foreach (string path in paths)
+            if (File.Exists(path) || Directory.Exists(path))
             {
-                if (File.Exists(path) || Directory.Exists(path))
-                {
-                    return path;
-                }
+                absolutePath = path;
+                return true;
             }
-            return string.Empty;
+            absolutePath = null;
+            return false;
         }
 
-        public static string GetFullStockPath(string relativePath)
+        public static bool TryGetFullModDlcPath(string relativePath, [NotNullWhen(true)]out string? absolutePath)
+        {
+            if (RootDir == null)
+            {
+                throw new InvalidOperationException("Attempted to read path without root directory");
+            }
+            string path = Path.Combine(RootDir, DlcPath, relativePath);
+
+            if (File.Exists(path) || Directory.Exists(path))
+            {
+                absolutePath = path;
+                return true;
+            }
+            absolutePath = null;
+            return false;
+        }
+
+        public static string GetFullDumpPath(string relativePath)
         {
             Settings settings = Settings.Load();
             string root;
@@ -586,10 +617,10 @@ namespace BotwFlagUtil.Models
             return nearestShrine;
         }
 
-        public static bool GetStockMainFieldMapReader(string fileName, out RevrsReader reader)
+        public static bool TryGetStockMainFieldMapReader(string fileName, out RevrsReader reader)
         {
             string section = fileName.Split('_')[0];
-            string path = GetFullStockPath($"Map/MainField/{section}/{fileName}");
+            string path = GetFullDumpPath($"Map/MainField/{section}/{fileName}");
             if (File.Exists(path))
             {
                 reader = new(Yaz0.Decompress(File.ReadAllBytes(path)), ModEndianness);
@@ -599,12 +630,12 @@ namespace BotwFlagUtil.Models
             return false;
         }
 
-        public static bool GetStockPackReader(string fileName, out RevrsReader reader)
+        public static bool TryGetStockPackReader(string fileName, out RevrsReader reader)
         {
-            string path = GetFullStockPath($"Pack/{fileName}");
+            string path = GetFullDumpPath($"Pack/{fileName}");
             if (File.Exists(path))
             {
-                reader = new(File.ReadAllBytes(path), ModEndianness);
+                reader = new(File.ReadAllBytes(path));
                 return true;
             }
             reader = default;

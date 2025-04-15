@@ -11,7 +11,6 @@ using BotwFlagUtil.Models.Enums;
 using BotwFlagUtil.Models.GameData;
 using BotwFlagUtil.Models.GameData.Util;
 using ReactiveUI;
-using Revrs;
 
 namespace BotwFlagUtil.ViewModels;
 
@@ -336,7 +335,7 @@ public class MainWindowViewModel : ViewModelBase
             confirmed = confirmeds[nextFlagName];
             SetConfirmText(confirmed);
 
-            // Bit of a workaround to keep the extra behavior of the properties from running
+            // A bit of a workaround to keep the extra behavior of the properties from running
             this.RaisePropertyChanged(nameof(FlagType));
             this.RaisePropertyChanged(nameof(InitValue));
             this.RaisePropertyChanged(nameof(MaxValue));
@@ -354,17 +353,14 @@ public class MainWindowViewModel : ViewModelBase
 
     public void OpenMod(string rootDir)
     {
-        if (!(Directory.Exists(Path.Combine(rootDir, "content")) ||
-            Directory.Exists(Path.Combine(rootDir, "aoc")) ||
-            Directory.Exists(Path.Combine(rootDir, "01007EF00011E000", "romfs")) ||
-            Directory.Exists(Path.Combine(rootDir, "01007EF00011E800", "romfs")) ||
-            Directory.Exists(Path.Combine(rootDir, "01007EF00011F001", "romfs"))))
+        Helpers.RootDir = rootDir;
+        if (!(Directory.Exists(Path.Combine(rootDir, Helpers.GamePath)) ||
+              Directory.Exists(Path.Combine(rootDir, Helpers.DlcPath))))
         {
             return;
         }
         string modName = Path.GetFileName(Path.TrimEndingDirectorySeparator(rootDir));
         Title = $"BotwFlagUtil - {modName}";
-        Helpers.rootDir = rootDir;
 
         generator.ReplaceManager(new());
         generator.GenerateActorFlags();
@@ -405,20 +401,20 @@ public class MainWindowViewModel : ViewModelBase
 
     public void Export()
     {
-        if (Helpers.rootDir == null)
+        if (Helpers.RootDir == null)
         {
             return;
         }
 
-        using FileStream stream = File.Open(Path.Combine(Helpers.rootDir, "flags.json"), FileMode.Create);
+        using FileStream stream = File.Open(Path.Combine(Helpers.RootDir, "flags.json"), FileMode.Create);
         JsonSerializer.Serialize(stream, generator.Mgr, Helpers.JsOpt);
     }
 
     public void Import()
     {
-        if (Helpers.rootDir != null)
+        if (Helpers.RootDir != null)
         {
-            string flagPath = Path.Combine(Helpers.rootDir, "flags.json");
+            string flagPath = Path.Combine(Helpers.RootDir, "flags.json");
             if (File.Exists(flagPath))
             {
                 FlagMgr? flagMgr;
@@ -504,18 +500,12 @@ public class MainWindowViewModel : ViewModelBase
 
     public void Save()
     {
-        if (Helpers.rootDir != null)
+        if (Helpers.RootDir != null)
         {
-            string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
-            if (bootupPath == string.Empty)
+            if (!Helpers.TryGetFullModPath("Pack/Bootup.pack", out string? bootupPath))
             {
-                bootupPath = Path.Combine(
-                    Helpers.rootDir,
-                    Helpers.ModEndianness == Endianness.Big ? "content" :
-                        "01007EF00011E800/romfs",
-                    "Pack/Bootup.pack"
-                );
-                File.Copy(Helpers.GetFullStockPath("Pack/Bootup.pack"), bootupPath);
+                bootupPath = Path.Combine(Helpers.RootDir, Helpers.GamePath, "Pack", "Bootup.pack");
+                File.Copy(Helpers.GetFullDumpPath("Pack/Bootup.pack"), bootupPath);
             }
             FlagMgr compiled = FlagMgr.Open(bootupPath);
             compiled.Merge(generator.Mgr);

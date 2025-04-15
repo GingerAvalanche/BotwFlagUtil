@@ -79,12 +79,11 @@ namespace BotwFlagUtil.Models
 
         public void GenerateActorFlags()
         {
-            if (Helpers.rootDir == null)
+            if (Helpers.RootDir == null)
             {
                 throw new InvalidOperationException("Evaluating maps before setting root directory!");
             }
-            string actorInfoPath = Helpers.GetFullModPath("Actor/ActorInfo.product.sbyml");
-            if (actorInfoPath == string.Empty)
+            if (!Helpers.TryGetFullModGamePath("Actor/ActorInfo.product.sbyml", out var actorInfoPath))
             {
                 return;
             }
@@ -226,8 +225,7 @@ namespace BotwFlagUtil.Models
                 {
                     continue; // Ignore DressFairies, their inventory is fake
                 }
-                string path = Helpers.GetFullModPath($"Actor/Pack/{actorName}.sbactorpack");
-                if (path == string.Empty)
+                if (!Helpers.TryGetFullModGamePath($"Actor/Pack/{actorName}.sbactorpack", out var path))
                 {
                     continue; // Ignore NPCs that aren't modified by this mod
                 }
@@ -281,8 +279,7 @@ namespace BotwFlagUtil.Models
         public void GenerateEventFlags()
         {
             // TODO: Handle event packs in titlebg (and bootup?)
-            string path = Helpers.GetFullModPath("Event");
-            if (path == string.Empty)
+            if (!Helpers.TryGetFullModGamePath("Event", out var path))
             {
                 return;
             }
@@ -527,7 +524,7 @@ namespace BotwFlagUtil.Models
                                 3 => [mapType.ToString(), actorName, hashId.ToString()],
                                 _ => throw new NotImplementedException(),
                             };
-                            flagName = string.Format(LinkTagFlagNames[makeSaveFlag], parts);
+                            flagName = string.Format(LinkTagFlagNames[makeSaveFlag], parts.ToArray<object>());
                         }
                         else if (paramsMap.TryGetValue(
                                      keyTable, "SaveFlag", out ImmutableByml linkSaveFlag
@@ -732,32 +729,32 @@ namespace BotwFlagUtil.Models
 
         public void GenerateLevelSensorFlags()
         {
-            string bootupPath = Helpers.GetFullModPath("Pack/Bootup.pack");
-            if (File.Exists(bootupPath))
+            if (!Helpers.TryGetFullModGamePath("Pack/Bootup.pack", out var bootupPath))
             {
-                RevrsReader bootupReader = new(File.ReadAllBytes(bootupPath), Helpers.ModEndianness);
-                ImmutableSarc bootup = new(ref bootupReader);
-                RevrsReader levelReader = new(Yaz0.Decompress(bootup["Ecosystem/LevelSensor.sbyml"].Data), Helpers.ModEndianness);
-                ImmutableByml levelSensor = new(ref levelReader);
-                ImmutableBymlMap levelMap = levelSensor.GetMap();
-                ImmutableBymlStringTable stringTable = levelSensor.StringTable;
-                ImmutableBymlStringTable keyTable = levelSensor.KeyTable;
-                foreach (ImmutableByml entry in levelMap.GetValue(keyTable, "flag").GetArray())
+                return;
+            }
+            RevrsReader bootupReader = new(File.ReadAllBytes(bootupPath), Helpers.ModEndianness);
+            ImmutableSarc bootup = new(ref bootupReader);
+            RevrsReader levelReader = new(Yaz0.Decompress(bootup["Ecosystem/LevelSensor.sbyml"].Data), Helpers.ModEndianness);
+            ImmutableByml levelSensor = new(ref levelReader);
+            ImmutableBymlMap levelMap = levelSensor.GetMap();
+            ImmutableBymlStringTable stringTable = levelSensor.StringTable;
+            ImmutableBymlStringTable keyTable = levelSensor.KeyTable;
+            foreach (ImmutableByml entry in levelMap.GetValue(keyTable, "flag").GetArray())
+            {
+                string flagName = entry.GetMap().GetValue(keyTable, "name").GetString(stringTable);
+                StageFlag(new(
+                    flagName,
+                    FlagUnionType.S32,
+                    isSave: true,
+                    resetType: 0,
+                    isRevival: false
+                )
                 {
-                    string flagName = entry.GetMap().GetValue(keyTable, "name").GetString(stringTable);
-                    StageFlag(new(
-                        flagName,
-                        FlagUnionType.S32,
-                        isSave: true,
-                        resetType: 0,
-                        isRevival: false
-                    )
-                    {
-                        InitValue = 0,
-                        MaxValue = 65535,
-                        MinValue = 0
-                    }, GeneratorConfidence.Good);
-                }
+                    InitValue = 0,
+                    MaxValue = 65535,
+                    MinValue = 0
+                }, GeneratorConfidence.Good);
             }
         }
 
@@ -815,8 +812,7 @@ namespace BotwFlagUtil.Models
         public void GenerateMapFlags()
         {
             EnumerationOptions options = new() { RecurseSubdirectories = true };
-            string mainfieldPath = Helpers.GetFullModPath("Map/MainField");
-            if (mainfieldPath != string.Empty)
+            if (Helpers.TryGetFullModDlcPath("Map/MainField", out var mainfieldPath))
             {
                 foreach (string path in Directory.EnumerateFiles(
                     mainfieldPath, "?-?_*.smubin", options
@@ -825,7 +821,7 @@ namespace BotwFlagUtil.Models
                     Span<byte> bytes = Yaz0.Decompress(File.ReadAllBytes(path));
                     RevrsReader reader = new(bytes, Helpers.ModEndianness);
                     ImmutableByml modMap = new(ref reader);
-                    if (!Helpers.GetStockMainFieldMapReader(
+                    if (!Helpers.TryGetStockMainFieldMapReader(
                         Path.GetFileName(path), out RevrsReader stockReader
                     ))
                     {
@@ -842,14 +838,13 @@ namespace BotwFlagUtil.Models
                 }
             }
 
-            string mainStaticPath = Helpers.GetFullModPath("Map/MainField/Static.smubin");
-            if (mainStaticPath != string.Empty)
+            if (Helpers.TryGetFullModDlcPath("Map/MainField/Static.smubin", out var mainStaticPath))
             {
                 GenerateMainStaticFlags(mainStaticPath);
             }
 
-            string packPath = Helpers.GetFullModPath("Pack");
-            if (packPath == string.Empty)
+            // TODO: Do Dlc Pack path as well
+            if (!Helpers.TryGetFullModGamePath("Pack", out var packPath))
             {
                 return;
             }
@@ -860,10 +855,10 @@ namespace BotwFlagUtil.Models
             ))
             {
                 string mapName = Path.GetFileNameWithoutExtension(path);
-                RevrsReader reader = new(File.ReadAllBytes(path), Helpers.ModEndianness);
+                RevrsReader reader = new(File.ReadAllBytes(path));
                 ImmutableSarc modPack = new(ref reader);
                 bool hasStock =
-                    Helpers.GetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
+                    Helpers.TryGetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
 
                 if (hasStock)
                 {
@@ -899,49 +894,50 @@ namespace BotwFlagUtil.Models
 
         public void GenerateQuestFlags()
         {
-            string titleBgPath = Helpers.GetFullModPath("Pack/TitleBG.pack");
-            if (File.Exists(titleBgPath))
+            if (!Helpers.TryGetFullModGamePath("Pack/TitleBG.pack", out var titleBgPath) ||
+                !File.Exists(titleBgPath))
             {
-                RevrsReader titleBgReader = new(File.ReadAllBytes(titleBgPath), Helpers.ModEndianness);
-                ImmutableSarc titleBg = new(ref titleBgReader);
-                RevrsReader questReader = new(Yaz0.Decompress(titleBg["Quest/QuestProduct.sbquestpack"].Data), Helpers.ModEndianness);
-                ImmutableByml questProduct = new(ref questReader);
-                ImmutableBymlStringTable stringTable = questProduct.StringTable;
-                ImmutableBymlStringTable keyTable = questProduct.KeyTable;
-                foreach (ImmutableByml entry in questProduct.GetArray())
+                return;
+            }
+            RevrsReader titleBgReader = new(File.ReadAllBytes(titleBgPath), Helpers.ModEndianness);
+            ImmutableSarc titleBg = new(ref titleBgReader);
+            RevrsReader questReader = new(Yaz0.Decompress(titleBg["Quest/QuestProduct.sbquestpack"].Data), Helpers.ModEndianness);
+            ImmutableByml questProduct = new(ref questReader);
+            ImmutableBymlStringTable stringTable = questProduct.StringTable;
+            ImmutableBymlStringTable keyTable = questProduct.KeyTable;
+            foreach (ImmutableByml entry in questProduct.GetArray())
+            {
+                foreach (ImmutableByml stepDep in entry.GetMap().GetValue(keyTable, "StepDependencyFlags").GetArray())
                 {
-                    foreach (ImmutableByml stepDep in entry.GetMap().GetValue(keyTable, "StepDependencyFlags").GetArray())
+                    string flagName = stepDep.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
+                    StageFlag(new(
+                        flagName,
+                        FlagUnionType.Bool,
+                        isSave: true,
+                        resetType: 0,
+                        isRevival: false
+                    )
                     {
-                        string flagName = stepDep.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
-                        StageFlag(new(
-                            flagName,
-                            FlagUnionType.Bool,
-                            isSave: true,
-                            resetType: 0,
-                            isRevival: false
-                        )
-                        {
-                            InitValue = 0,
-                            MaxValue = true,
-                            MinValue = false
-                        }, GeneratorConfidence.Definite);
-                    }
-                    foreach (ImmutableByml step in entry.GetMap().GetValue(keyTable, "Steps").GetArray())
+                        InitValue = 0,
+                        MaxValue = true,
+                        MinValue = false
+                    }, GeneratorConfidence.Definite);
+                }
+                foreach (ImmutableByml step in entry.GetMap().GetValue(keyTable, "Steps").GetArray())
+                {
+                    string flagName = step.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
+                    StageFlag(new(
+                        flagName,
+                        FlagUnionType.Bool,
+                        isSave: true,
+                        resetType: 0,
+                        isRevival: false
+                    )
                     {
-                        string flagName = step.GetMap().GetValue(keyTable, "NextFlag").GetString(stringTable);
-                        StageFlag(new(
-                            flagName,
-                            FlagUnionType.Bool,
-                            isSave: true,
-                            resetType: 0,
-                            isRevival: false
-                        )
-                        {
-                            InitValue = 0,
-                            MaxValue = true,
-                            MinValue = false
-                        }, GeneratorConfidence.Definite);
-                    }
+                        InitValue = 0,
+                        MaxValue = true,
+                        MinValue = false
+                    }, GeneratorConfidence.Definite);
                 }
             }
         }
