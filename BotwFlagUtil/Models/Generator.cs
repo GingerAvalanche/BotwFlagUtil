@@ -843,50 +843,58 @@ namespace BotwFlagUtil.Models
                 GenerateMainStaticFlags(mainStaticPath);
             }
 
-            // TODO: Do Dlc Pack path as well
-            if (!Helpers.TryGetFullModGamePath("Pack", out var packPath))
+            List<string> packPaths = new(2);
+            if (Helpers.TryGetFullModGamePath("Pack", out var absolutePath))
             {
-                return;
+                packPaths.Add(absolutePath);
             }
-            foreach (string path in Directory.EnumerateFiles(
-                packPath,
-                "Dungeon*.pack",
-                options
-            ))
+            if (Helpers.TryGetFullModDlcPath("Pack", out absolutePath))
             {
-                string mapName = Path.GetFileNameWithoutExtension(path);
-                RevrsReader reader = new(File.ReadAllBytes(path));
-                ImmutableSarc modPack = new(ref reader);
-                bool hasStock =
-                    Helpers.TryGetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
+                packPaths.Add(absolutePath);
+            }
 
-                if (hasStock)
+            foreach (string packPath in packPaths)
+            {
+                foreach (string path in Directory.EnumerateFiles(
+                    packPath,
+                    "Dungeon*.pack",
+                    options
+                ))
                 {
-                    ImmutableSarc stockPack = new(ref stockReader);
-                    foreach (string suffix in (string[])["_Static", "_Dynamic"])
-                    {
-                        string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
-                        RevrsReader modMapReader = new(
-                            Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
-                        );
-                        ImmutableByml modMap = new(ref modMapReader);
+                    string mapName = Path.GetFileNameWithoutExtension(path);
+                    RevrsReader reader = new(File.ReadAllBytes(path));
+                    ImmutableSarc modPack = new(ref reader);
+                    bool hasStock =
+                        Helpers.TryGetStockPackReader(Path.GetFileName(path), out RevrsReader stockReader);
 
-                        RevrsReader stockMapReader = new(
-                            Yaz0.Decompress(stockPack[sarcPath].Data), Helpers.ModEndianness
-                        );
-                        ImmutableByml stockMap = new(ref stockMapReader);
-                        GenerateFlagsForMapWithDiff(modMap, stockMap, MapType.CDungeon, mapName);
+                    if (hasStock)
+                    {
+                        ImmutableSarc stockPack = new(ref stockReader);
+                        foreach (string suffix in (string[])["_Static", "_Dynamic"])
+                        {
+                            string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
+                            RevrsReader modMapReader = new(
+                                Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
+                            );
+                            ImmutableByml modMap = new(ref modMapReader);
+
+                            RevrsReader stockMapReader = new(
+                                Yaz0.Decompress(stockPack[sarcPath].Data), Helpers.ModEndianness
+                            );
+                            ImmutableByml stockMap = new(ref stockMapReader);
+                            GenerateFlagsForMapWithDiff(modMap, stockMap, MapType.CDungeon, mapName);
+                        }
                     }
-                }
-                else
-                {
-                    foreach (string suffix in (string[])["_Static", "_Dynamic"])
+                    else
                     {
-                        string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
-                        RevrsReader modMapReader = new(
-                            Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
-                        );
-                        GenerateFlagsForMap(new(ref modMapReader), MapType.CDungeon, mapName);
+                        foreach (string suffix in (string[])["_Static", "_Dynamic"])
+                        {
+                            string sarcPath = $"Map/CDungeon/{mapName}/{mapName}{suffix}.smubin";
+                            RevrsReader modMapReader = new(
+                                Yaz0.Decompress(modPack[sarcPath].Data), Helpers.ModEndianness
+                            );
+                            GenerateFlagsForMap(new(ref modMapReader), MapType.CDungeon, mapName);
+                        }
                     }
                 }
             }
