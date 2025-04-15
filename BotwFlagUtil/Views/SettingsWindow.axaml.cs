@@ -131,7 +131,7 @@ namespace BotwFlagUtil.Views
                 {
                     ButtonDefinitions = ButtonEnum.Ok,
                     ContentTitle = "Error",
-                    ContentMessage = ex.Message,
+                    ContentMessage = $"{ex.Message}\n{ex.StackTrace ?? ""}",
                     MaxHeight = 800,
                     Width = 500,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
