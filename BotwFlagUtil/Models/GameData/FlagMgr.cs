@@ -302,32 +302,51 @@ namespace BotwFlagUtil.Models.GameData
 
         private Dictionary<string, ReadOnlyMemory<byte>> GetSvDataFiles(Endianness endianness)
         {
-            HashSet<Flag> allFlags = flags.SelectMany(kvp => kvp.Value)
-                .Where(f => f.Value.IsSave)
-                .Select(v => v.Value)
-                .ToHashSet();
-            IEnumerable<BymlArray> saveFlags = allFlags.Where(f =>
-                    !(FlagHelpers.Caption.Contains(f.DataName) || FlagHelpers.Option.Contains(f.DataName)))
-                .Select(f => f.ToSvByml())
-                .Chunk(8192)
-                .Select(c => new BymlArray(c));
-            BymlArray captionFlags = new(allFlags.Where(f =>
-                FlagHelpers.Caption.Contains(f.DataName)).Select(f => f.ToSvByml()));
-            BymlArray optionFlags = new(allFlags.Where(f =>
-                FlagHelpers.Option.Contains(f.DataName)).Select(f => f.ToSvByml()));
+            BymlArray caption = new(FlagHelpers.Caption.Count);
+            BymlArray option = new(FlagHelpers.Option.Count);
+            List<BymlArray> general = new(flags.Count / 8192);
+            general.Add(new(8192));
+            int flagsInFile = 0;
+            int fileNum = 1;
+            foreach ((_, Flag flag) in flags.SelectMany(kvp => kvp.Value))
+            {
+                if (!flag.IsSave)
+                {
+                    continue;
+                }
+                if (FlagHelpers.Caption.Contains(flag.DataName))
+                {
+                    caption.Add(flag.ToSvByml());
+                }
+                else if (FlagHelpers.Option.Contains(flag.DataName))
+                {
+                    option.Add(flag.ToSvByml());
+                }
+                else
+                {
+                    if (flagsInFile == 8192)
+                    {
+                        flagsInFile = 0;
+                        general.Add(new(8192));
+                        ++fileNum;
+                    }
+                    general[fileNum-1].Add(flag.ToSvByml());
+                    ++flagsInFile;
+                }
+            }
 
             Dictionary<string, ReadOnlyMemory<byte>> svdataFiles = [];
-            int numFiles = saveFlags.Count() + 2;
-            int fileNum = 0;
-            foreach (BymlArray file in saveFlags)
+            int numFiles = general.Count + 2;
+            fileNum = 0;
+            foreach (BymlArray file in general)
             {
                 svdataFiles[$"/saveformat_{fileNum++}.bgsvdata"] =
                     FlagHelpers.MakeGameDataSaveFormatFile(file, numFiles, endianness);
             }
             svdataFiles[$"/saveformat_{fileNum++}.bgsvdata"] =
-                FlagHelpers.MakeCaptionSaveFormatFile(captionFlags, numFiles, endianness);
+                FlagHelpers.MakeCaptionSaveFormatFile(caption, numFiles, endianness);
             svdataFiles[$"/saveformat_{fileNum}.bgsvdata"] =
-                FlagHelpers.MakeOptionSaveFormatFile(optionFlags, numFiles, endianness);
+                FlagHelpers.MakeOptionSaveFormatFile(option, numFiles, endianness);
             return svdataFiles;
         }
 
