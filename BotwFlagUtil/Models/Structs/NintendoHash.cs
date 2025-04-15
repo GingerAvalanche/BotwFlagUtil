@@ -22,9 +22,13 @@ namespace BotwFlagUtil.Models.Structs
             {
                 ivalue = byml.GetInt();
             }
-            else
+            else if (byml.Type == BymlNodeType.UInt32)
             {
                 uvalue = byml.GetUInt32();
+            }
+            else
+            {
+                throw new ArgumentException("Invalid byml type");
             }
         }
         public static implicit operator NintendoHash(Byml byml) => new(byml);
@@ -35,9 +39,13 @@ namespace BotwFlagUtil.Models.Structs
             {
                 ivalue = ibyml.GetInt();
             }
-            else
+            else if (ibyml.Type == BymlNodeType.UInt32)
             {
                 uvalue = ibyml.GetUInt32();
+            }
+            else
+            {
+                throw new ArgumentException("Invalid byml type");
             }
         }
         public static implicit operator NintendoHash(ImmutableByml byml) => new(byml);
@@ -71,11 +79,7 @@ namespace BotwFlagUtil.Models.Structs
 
         public readonly override string ToString()
         {
-            if (ivalue < 0)
-            {
-                return $"!u 0x{uvalue:x8}";
-            }
-            return ivalue.ToString();
+            return ivalue < 0 ? $"!u 0x{uvalue:x8}" : ivalue.ToString();
         }
 
         public static bool operator ==(NintendoHash a, NintendoHash b) => a.uvalue == b.uvalue;
@@ -84,9 +88,12 @@ namespace BotwFlagUtil.Models.Structs
         public readonly bool Equals(NintendoHash other) => uvalue == other.uvalue;
         public readonly override bool Equals(object? other)
         {
-            if (other is null) return false;
-            if (other is NintendoHash hash) return uvalue == hash.uvalue;
-            return false;
+            return other switch
+            {
+                null => false,
+                NintendoHash hash => uvalue == hash.uvalue,
+                _ => false
+            };
         }
         public readonly override int GetHashCode() => uvalue.GetHashCode();
 
@@ -101,19 +108,16 @@ namespace BotwFlagUtil.Models.Structs
                     {
                         return intVal;
                     }
-                    else if (reader.TryGetUInt32(out uint uintVal))
+                    if (reader.TryGetUInt32(out uint uintVal))
                     {
                         return uintVal;
                     }
-                    else
+                    string? val = reader.GetString();
+                    if (val != null && val.StartsWith("!u 0", StringComparison.Ordinal))
                     {
-                        string? val = reader.GetString();
-                        if (val != null && val.StartsWith("!u 0", StringComparison.Ordinal))
-                        {
-                            return Convert.ToUInt32(val[5..], 16);
-                        }
-                        throw new JsonException($"NintendoHash must be int or uint, was {val ?? "null"}");
+                        return Convert.ToUInt32(val[5..], 16);
                     }
+                    throw new JsonException($"NintendoHash must be int or uint, was {val ?? "null"}");
                 }
                 throw new JsonException($"NintendoHash must be Number, was given {type}");
             }
