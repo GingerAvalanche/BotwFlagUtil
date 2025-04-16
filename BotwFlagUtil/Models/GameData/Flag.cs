@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Aamp.Security.Cryptography;
-using BotwFlagUtil.GameData.Util;
+using AampLibrary.IO.Hashing;
 using BotwFlagUtil.Models.GameData.Util;
 using BotwFlagUtil.Models.Structs;
 using BymlLibrary;
@@ -198,7 +197,7 @@ namespace BotwFlagUtil.Models.GameData
             private set
             {
                 dataName = value;
-                hashValue = (int)Crc32.Compute(dataName);
+                hashValue = (int)Crc32.ComputeHash(dataName);
             }
         }
         public readonly NintendoHash HashValue => hashValue;

@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Aamp.Security.Cryptography;
+using AampLibrary.IO.Hashing;
 using BymlLibrary;
 
 namespace BotwFlagUtil.Models.Structs
@@ -64,7 +64,7 @@ namespace BotwFlagUtil.Models.Structs
 
         private NintendoHash(string val)
         {
-            uvalue = Crc32.Compute(val);
+            uvalue = Crc32.ComputeHash(val);
         }
         public static implicit operator NintendoHash(string val) => new(val);
 

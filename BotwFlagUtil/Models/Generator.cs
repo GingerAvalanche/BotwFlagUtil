@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Aamp.Security.Cryptography;
+using AampLibrary;
+using AampLibrary.IO.Hashing;
 using BfevLibrary;
 using BfevLibrary.Core;
 using BotwFlagUtil.GameData.Util;
@@ -14,7 +15,6 @@ using BotwFlagUtil.Models.Structs;
 using BymlLibrary;
 using BymlLibrary.Nodes.Immutable.Containers;
 using CsYaz0;
-using Nintendo.Aamp;
 using Revrs;
 using SarcLibrary;
 
@@ -233,44 +233,36 @@ namespace BotwFlagUtil.Models
                 RevrsReader npcReader =
                     new(Yaz0.Decompress(File.ReadAllBytes(path)), Helpers.ModEndianness);
                 ImmutableSarc pack = new(ref npcReader);
-                AampFile bxml = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data.ToArray());
-                string shopLink = bxml.RootNode
-                    .Objects("LinkTarget")!
-                    .Params("ShopDataUser")!
-                    .Value.ToString()!;
+                RevrsReader aampReader = new(pack[$"Actor/ActorLink/{actorName}.bxml"].Data);
+                ImmutableAamp bxml = new(ref aampReader);
+                string shopLink = bxml.GetParam([], "LinkTarget", "ShopDataUser").GetString()!;
                 if (shopLink == "Dummy")
                 {
                     continue;
                 }
 
-                StageFlag(new(
-                    $"{actorName}_SoldOut",
-                    FlagUnionType.Bool,
-                    isSave: true
-                ) {
-                    MaxValue = true
-                }, GeneratorConfidence.Definite);
-
-                AampFile bshop = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data.ToArray());
-                foreach (ParamEntry entry in bshop.RootNode.Objects("Header")!.ParamEntries)
+                aampReader = new(pack[$"Actor/ShopData/{shopLink}.bshop"].Data);
+                ImmutableAamp bshop = new(ref aampReader);
+                int numTables = bshop.GetParam([], "Header", "TableNum").GetInt();
+                for (int i = 0; i < numTables; ++i)
                 {
-                    if (entry.HashString == "TableNum")
+                    string tableName = bshop.GetParam([], "Header", $"Table{i+1:d2}").GetString()!;
+                    ParameterObject table = bshop.GetParameterObject([], tableName);
+                    int numItems = table["ColumnNum"].GetInt();
+                    for (int j = 0; j < numItems; ++j)
                     {
-                        continue;
-                    }
-                    foreach (ParamEntry tableEntry in
-                        bshop.RootNode.Objects(entry.Value.ToString()!)!.ParamEntries)
-                    {
-                        if (tableEntry.HashString.StartsWith("ItemName", StringComparison.Ordinal))
+                        if (table[$"ItemNum{j + 1:d3}"].GetInt() <= 0)
                         {
-                            StageFlag(new(
-                                $"{actorName}_{tableEntry.Value}",
-                                FlagUnionType.S32,
-                                isSave: true
-                            ) {
-                                MaxValue = 65535
-                            }, GeneratorConfidence.Definite);
+                            continue;
                         }
+                        string itemName = table[$"ItemName{j+1:d3}"].GetString()!;
+                        StageFlag(new(
+                            $"{actorName}_{itemName}",
+                            FlagUnionType.S32,
+                            isSave: true
+                        ) {
+                            MaxValue = 65535
+                        }, GeneratorConfidence.Definite);
                     }
                 }
             }
@@ -634,11 +626,10 @@ namespace BotwFlagUtil.Models
             ImmutableBymlStringTable modStringTable = mod.StringTable;
             ImmutableBymlArray modObjs = mod.GetMap().GetValue(modKeyTable, "Objs").GetArray();
             NintendoHash[] modHashes = new NintendoHash[modObjs.Count];
-            ImmutableBymlMap objMap;
 
             for (int i = 0; i < modObjs.Count; ++i)
             {
-                objMap = modObjs[i].GetMap();
+                var objMap = modObjs[i].GetMap();
                 modHashes[i] = objMap.GetValue(modKeyTable, "HashId");
                 if (
                     GenerateFlagForMapActor(
@@ -717,7 +708,7 @@ namespace BotwFlagUtil.Models
                 if (!modHashes.Contains(stockHashes[i]))
                 {
                     objMap = stockObjs[i].GetMap();
-                    uint oldHash = Crc32.Compute(
+                    uint oldHash = Crc32.ComputeHash(
                         $"{mapType}_{
                             objMap.GetValue(stockKeyTable, "UnitConfigName").GetString(stockStringTable)
                         }_{stockHashes[i]}"

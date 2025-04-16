@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using AampLibrary;
+using AampLibrary.IO.Hashing;
+using AampLibrary.Primitives;
+using AampLibrary.Structures;
 using BotwFlagUtil.GameData.Util;
 using BotwFlagUtil.Models.GameData.Util;
 using BymlLibrary;
 using BymlLibrary.Extensions;
 using BymlLibrary.Nodes.Immutable.Containers;
+using Revrs;
 
 namespace BotwFlagUtil.Models
 {
@@ -241,5 +247,184 @@ namespace BotwFlagUtil.Models
         internal static string GetString(this ImmutableByml byml, ImmutableBymlStringTable table) =>
             table[byml.GetStringIndex()]
                 .ToManaged();
+
+        internal static ParameterObject GetParameterObject(this ImmutableAamp aamp, string[] lists, string obj)
+        {
+            uint hash;
+            AampParameterList subList = aamp.IO;
+            
+            int count = subList.ListCount;
+            int group = subList.ListsOffset;
+            int baseOffset = 0;
+
+            foreach (var name in lists)
+            {
+                hash = Crc32.ComputeHash(name);
+                for (int i = 0; i < count; ++i)
+                {
+                    subList =
+                        aamp.GetList(i, baseOffset + group * 4, out int listOffset);
+
+                    if (subList.Name != hash)
+                    {
+                        if (i == lists.Length - 1)
+                        {
+                            throw new KeyNotFoundException(string.Join("->",lists));
+                        }
+                        continue;
+                    }
+                    count = subList.ListCount;
+                    group = subList.ListsOffset;
+                    baseOffset = listOffset;
+                    break;
+                }
+            }
+            
+            hash = Crc32.ComputeHash(obj);
+
+            for (int j = 0; j < subList.ObjectCount; ++j)
+            {
+                ref AampParameterObject subObject =
+                    ref aamp.GetObject(j, baseOffset + subList.ObjectsOffset * 4, out int objOffset);
+
+                if (subObject.Name != hash) continue;
+                ParameterObject pObj = new(subObject.ParameterCount);
+
+                for (int k = 0; k < subObject.ParameterCount; ++k) {
+                    ref AampParameter parameter = ref aamp.GetParameter(
+                        k,
+                        objOffset + subObject.ParametersOffset * 4,
+                        out int parameterOffset
+                    );
+
+                    int dataOffset = parameterOffset + parameter.DataOffset * 4;
+                    RevrsReader reader = new(aamp.ParameterData[dataOffset..], Endianness.Little);
+
+                    pObj[parameter.Name] = parameter.Type switch {
+                        AampParameterType.Bool => reader.Read<uint>() != 0,
+                        AampParameterType.Float => reader.Read<float>(),
+                        AampParameterType.Int => reader.Read<int>(),
+                        AampParameterType.Vec2 => reader.Read<Vector2>(),
+                        AampParameterType.Vec3 => reader.Read<Vector3>(),
+                        AampParameterType.Vec4 => reader.Read<Vector4>(),
+                        AampParameterType.Color => reader.Read<Color4>(),
+                        AampParameterType.String32 or
+                        AampParameterType.String64 or
+                        AampParameterType.String256 or
+                        AampParameterType.StringRef => new(aamp.ReadString(dataOffset), parameter.Type),
+                        AampParameterType.Curve1 => reader.Read<Curve1>(),
+                        AampParameterType.Curve2 => reader.Read<Curve2>(),
+                        AampParameterType.Curve3 => reader.Read<Curve3>(),
+                        AampParameterType.Curve4 => reader.Read<Curve4>(),
+                        AampParameterType.IntArray => ReadArray<int>(ref reader),
+                        AampParameterType.FloatArray => ReadArray<float>(ref reader),
+                        AampParameterType.Quat => reader.Read<Quaternion>(),
+                        AampParameterType.UInt32 => reader.Read<uint>(),
+                        AampParameterType.UInt32Array => ReadArray<uint>(ref reader),
+                        AampParameterType.ByteArray => ReadArray<byte>(ref reader),
+                        _ => throw new InvalidOperationException($"""
+                            Invalid or unsupported parameter type: '{parameter.Type}'
+                            """)
+                    };
+                }
+
+                return pObj;
+            }
+            throw new KeyNotFoundException(string.Join("->",[..lists, obj]));
+        }
+        
+        internal static Parameter GetParam(this ImmutableAamp aamp, string[] lists, string obj, string param)
+        {
+            uint hash;
+            AampParameterList subList = aamp.IO;
+            
+            int count = subList.ListCount;
+            int group = subList.ListsOffset;
+            int baseOffset = 0;
+
+            foreach (var name in lists)
+            {
+                hash = Crc32.ComputeHash(name);
+                for (int i = 0; i < count; ++i)
+                {
+                    subList =
+                        aamp.GetList(i, baseOffset + group * 4, out int listOffset);
+
+                    if (subList.Name != hash)
+                    {
+                        if (i == lists.Length - 1)
+                        {
+                            throw new KeyNotFoundException(string.Join("->",lists));
+                        }
+                        continue;
+                    }
+                    count = subList.ListCount;
+                    group = subList.ListsOffset;
+                    baseOffset = listOffset;
+                    break;
+                }
+            }
+            
+            hash = Crc32.ComputeHash(obj);
+            
+            for (int j = 0; j < subList.ObjectCount; ++j)
+            {
+                ref AampParameterObject subObject =
+                    ref aamp.GetObject(j, baseOffset + subList.ObjectsOffset * 4, out int objOffset);
+                
+                if (subObject.Name != hash) continue;
+                count = subObject.ParameterCount;
+                group = subObject.ParametersOffset;
+                baseOffset = objOffset;
+
+                hash = Crc32.ComputeHash(param);
+
+                for (int k = 0; k < count; ++k)
+                {
+                    ref AampParameter parameter =
+                        ref aamp.GetParameter(k, baseOffset + group * 4, out int paramOffset);
+
+                    if (parameter.Name != hash) continue;
+                    int dataOffset = paramOffset + parameter.DataOffset * 4;
+                    RevrsReader reader = new(aamp.ParameterData[dataOffset..], Endianness.Little);
+
+                    return parameter.Type switch
+                    {
+                        AampParameterType.Bool => reader.Read<uint>() != 0,
+                        AampParameterType.Float => reader.Read<float>(),
+                        AampParameterType.Int => reader.Read<int>(),
+                        AampParameterType.Vec2 => reader.Read<Vector2>(),
+                        AampParameterType.Vec3 => reader.Read<Vector3>(),
+                        AampParameterType.Vec4 => reader.Read<Vector4>(),
+                        AampParameterType.Color => reader.Read<Color4>(),
+                        AampParameterType.String32 or
+                        AampParameterType.String64 or
+                        AampParameterType.String256 or
+                        AampParameterType.StringRef => new(aamp.ReadString(dataOffset), parameter.Type),
+                        AampParameterType.Curve1 => reader.Read<Curve1>(),
+                        AampParameterType.Curve2 => reader.Read<Curve2>(),
+                        AampParameterType.Curve3 => reader.Read<Curve3>(),
+                        AampParameterType.Curve4 => reader.Read<Curve4>(),
+                        AampParameterType.IntArray => ReadArray<int>(ref reader),
+                        AampParameterType.FloatArray => ReadArray<float>(ref reader),
+                        AampParameterType.Quat => reader.Read<Quaternion>(),
+                        AampParameterType.UInt32 => reader.Read<uint>(),
+                        AampParameterType.UInt32Array => ReadArray<uint>(ref reader),
+                        AampParameterType.ByteArray => ReadArray<byte>(ref reader),
+                        _ => throw new InvalidOperationException($"""
+                            Invalid or unsupported parameter type: '{parameter.Type}'
+                            """)
+                    };
+                }
+            }
+            throw new KeyNotFoundException(string.Join("->",[..lists, obj, param]));
+        }
+
+        private static T[] ReadArray<T>(ref RevrsReader reader) where T : unmanaged
+        {
+            reader.Move(-4);
+            int count = reader.Read<int>();
+            return reader.ReadSpan<T>(count).ToArray();
+        }
     }
 }
