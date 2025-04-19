@@ -9,18 +9,19 @@ namespace BotwFlagUtil.Models
 {
     internal class Settings(string gameDir, string updateDir, string dlcDir, string gameDirNx, string dlcDirNx)
     {
+        private static JsonSerializerOptions _jsOpt = new() { WriteIndented = true };
         private static readonly string SettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "botw_tools", "settings.json");
         public bool WiiU = true;
         [JsonInclude]
-        public string GameDir = gameDir;
+        public string gameDir = gameDir;
         [JsonInclude]
-        public string GameDirNx = gameDirNx;
+        public string gameDirNx = gameDirNx;
         [JsonInclude]
-        public string UpdateDir = updateDir;
+        public string updateDir = updateDir;
         [JsonInclude]
-        public string DlcDir = dlcDir;
+        public string dlcDir = dlcDir;
         [JsonInclude]
-        public string DlcDirNx = dlcDirNx;
+        public string dlcDirNx = dlcDirNx;
 
         public static Settings Load()
         {
@@ -89,44 +90,44 @@ namespace BotwFlagUtil.Models
             }
             File.WriteAllText(
                 SettingsPath,
-                JsonSerializer.Serialize(value, Helpers.JsOpt)
+                JsonSerializer.Serialize(value, _jsOpt)
             );
             return value;
         }
 
         public void Save()
         {
-            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(this, Helpers.JsOpt));
+            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(this, _jsOpt));
         }
 
         public static bool Validate(Settings value)
         {
-            if (value is null or { GameDir: "", GameDirNx: "" })
+            if (value is null or { gameDir: "", gameDirNx: "" })
             {
                 return false;
             }
-            if (value.GameDir != string.Empty)
+            if (value.gameDir != string.Empty)
             {
-                if (!ValidateGameDir(value.GameDir))
+                if (!ValidateGameDir(value.gameDir))
                 {
                     return false;
                 }
-                if (!ValidateUpdateDir(value.UpdateDir))
+                if (!ValidateUpdateDir(value.updateDir))
                 {
                     return false;
                 }
-                if (value.DlcDir != string.Empty && !ValidateDlcDir(value.DlcDir))
+                if (value.dlcDir != string.Empty && !ValidateDlcDir(value.dlcDir))
                 {
                     return false;
                 }
             }
 
-            if (value.GameDirNx == string.Empty) return true;
-            if (!ValidateGameDirNx(value.GameDirNx))
+            if (value.gameDirNx == string.Empty) return true;
+            if (!ValidateGameDirNx(value.gameDirNx))
             {
                 return false;
             }
-            return value.DlcDirNx == string.Empty || ValidateDlcDirNx(value.DlcDirNx);
+            return value.dlcDirNx == string.Empty || ValidateDlcDirNx(value.dlcDirNx);
         }
 
         public static bool ValidateGameDir(string path) => File.Exists(Path.Combine(path, "Pack", "Dungeon000.pack"));

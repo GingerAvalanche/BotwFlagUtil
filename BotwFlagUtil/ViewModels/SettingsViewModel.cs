@@ -31,32 +31,32 @@ namespace BotwFlagUtil.ViewModels
 
         public string GameDir
         {
-            get => settings.GameDir;
-            set => this.RaiseAndSetIfChanged(ref settings.GameDir, value);
+            get => settings.gameDir;
+            set => this.RaiseAndSetIfChanged(ref settings.gameDir, value);
         }
 
         public string GameDirNx
         {
-            get => settings.GameDirNx;
-            set => this.RaiseAndSetIfChanged(ref settings.GameDirNx, value);
+            get => settings.gameDirNx;
+            set => this.RaiseAndSetIfChanged(ref settings.gameDirNx, value);
         }
 
         public string UpdateDir
         {
-            get => settings.UpdateDir;
-            set => this.RaiseAndSetIfChanged(ref settings.UpdateDir, value);
+            get => settings.updateDir;
+            set => this.RaiseAndSetIfChanged(ref settings.updateDir, value);
         }
 
         public string DlcDir
         {
-            get => settings.DlcDir;
-            set => this.RaiseAndSetIfChanged(ref settings.DlcDir, value);
+            get => settings.dlcDir;
+            set => this.RaiseAndSetIfChanged(ref settings.dlcDir, value);
         }
 
         public string DlcDirNx
         {
-            get => settings.DlcDirNx;
-            set => this.RaiseAndSetIfChanged(ref settings.DlcDirNx, value);
+            get => settings.dlcDirNx;
+            set => this.RaiseAndSetIfChanged(ref settings.dlcDirNx, value);
         }
         
         public bool LightTheme => appSettings.Theme == Theme.Light;

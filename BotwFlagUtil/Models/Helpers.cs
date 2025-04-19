@@ -571,31 +571,31 @@ namespace BotwFlagUtil.Models
             string root;
             if (ModEndianness == Endianness.Big)
             {
-                if (File.Exists(Path.Combine(settings.DlcDir, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.DlcDir, relativePath)))
+                if (File.Exists(Path.Combine(settings.dlcDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.dlcDir, relativePath)))
                 {
-                    root = settings.DlcDir;
+                    root = settings.dlcDir;
                 }
-                else if (File.Exists(Path.Combine(settings.UpdateDir, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.UpdateDir, relativePath)))
+                else if (File.Exists(Path.Combine(settings.updateDir, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.updateDir, relativePath)))
                 {
-                    root = settings.UpdateDir;
+                    root = settings.updateDir;
                 }
                 else
                 {
-                    root = settings.GameDir;
+                    root = settings.gameDir;
                 }
             }
             else
             {
-                if (File.Exists(Path.Combine(settings.DlcDirNx, relativePath)) ||
-                    Directory.Exists(Path.Combine(settings.DlcDirNx, relativePath)))
+                if (File.Exists(Path.Combine(settings.dlcDirNx, relativePath)) ||
+                    Directory.Exists(Path.Combine(settings.dlcDirNx, relativePath)))
                 {
-                    root = settings.DlcDirNx;
+                    root = settings.dlcDirNx;
                 }
                 else
                 {
-                    root = settings.GameDirNx;
+                    root = settings.gameDirNx;
                 }
             }
             return Path.Combine(root, relativePath);
